@@ -13,7 +13,10 @@
       "Write(C:/Users/jaaguilar/Documents/neuracode/proyecto_nulidad/**)",
       "Edit(C:/Users/jaaguilar/Documents/neuracode/proyecto_nulidad/**)",
       "Glob(**)",
-      "Grep(**)"
+      "Grep(**)",
+      "Bash(grep -oP 'https?://[^\"'\\\\''`,;\\\\s}]+backend[^\"'\\\\''`,;\\\\s}]*')",
+      "Bash(grep -oP 'https?://[^\\\\s\"'\\\\''`,;\\)}\\\\]]+')",
+      "Read(//tmp/**)"
     ]
   },
   "disabledMcpjsonServers": [
