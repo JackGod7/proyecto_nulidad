@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(rtk *)",
+      "Bash(uv *)",
+      "Bash(python *)",
+      "Bash(curl *)",
+      "Bash(mkdir *)",
+      "Bash(ls *)",
+      "Bash(wc *)",
+      "Bash(pip *)",
+      "Read(**)",
+      "Write(C:/Users/jaaguilar/Documents/neuracode/proyecto_nulidad/**)",
+      "Edit(C:/Users/jaaguilar/Documents/neuracode/proyecto_nulidad/**)",
+      "Glob(**)",
+      "Grep(**)"
+    ]
+  },
+  "disabledMcpjsonServers": [
+    "Vercel",
+    "Vercel Next Dev Tools"
+  ],
+  "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+}

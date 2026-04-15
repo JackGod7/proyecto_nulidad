@@ -1,0 +1,10 @@
+data/
+*.pdf
+__pycache__/
+*.pyc
+.venv/
+.checkpoints/
+*.egg-info/
+dist/
+image1.png
+image2.png
