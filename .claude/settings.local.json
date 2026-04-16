@@ -24,7 +24,15 @@
       "Bash(powershell -c \"Get-PSDrive -PSProvider FileSystem | Format-Table Name,Used,Free,Root -AutoSize\")",
       "Bash(powershell *)",
       "Bash(sqlite3 *)",
-      "Bash(python3 *)"
+      "Bash(python3 *)",
+      "Bash(mkdir -p src/scraping src/extraction src/db src/audit src/reporting src/utils)",
+      "Bash(touch src/scraping/__init__.py src/extraction/__init__.py src/db/__init__.py src/audit/__init__.py src/reporting/__init__.py src/utils/__init__.py)",
+      "Bash(cp src/browser_scraper.py src/scraping/browser_scraper.py)",
+      "Bash(cp src/api_client.py src/scraping/api_client.py)",
+      "Bash(cp src/scraper.py src/scraping/scraper.py)",
+      "Bash(cp src/extractor.py src/extraction/extractor.py)",
+      "Bash(cp src/ocr_hora.py src/extraction/ocr_hora.py)",
+      "WebSearch"
     ]
   },
   "disabledMcpjsonServers": [
