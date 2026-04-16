@@ -162,7 +162,7 @@ def extraer_fila_mesa(acta: dict[str, Any]) -> dict[str, Any]:
     }
     detalle = acta.get("detalle", [])
     if detalle:
-        from src.extractor import extraer_votos_top5
+        from src.extraction.extractor import extraer_votos_top5
         fila.update(extraer_votos_top5(detalle))
     else:
         for col in CANDIDATOS_TOP5.values():

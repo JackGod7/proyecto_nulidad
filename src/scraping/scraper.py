@@ -8,7 +8,7 @@ from pathlib import Path
 import pandas as pd
 from tqdm import tqdm
 
-from src.api_client import OnpeClient
+from src.scraping.api_client import OnpeClient
 from src.config import (
     ACTAS_SIN_PDF,
     CHECKPOINT_DIR,
@@ -19,7 +19,7 @@ from src.config import (
     PAGE_SIZE,
     UBIGEO_LIMA_PROVINCIA,
 )
-from src.extractor import extraer_archivos, extraer_fila_mesa
+from src.extraction.extractor import extraer_archivos, extraer_fila_mesa
 
 logging.basicConfig(
     level=logging.INFO,

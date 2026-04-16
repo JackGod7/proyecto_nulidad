@@ -2,7 +2,7 @@
 import argparse
 import json
 
-from src.progress_db import (
+from src.db.progress_db import (
     actas_fallidas,
     distritos_pendientes,
     init_db,

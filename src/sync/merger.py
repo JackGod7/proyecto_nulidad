@@ -7,7 +7,7 @@ from pathlib import Path
 logger = logging.getLogger(__name__)
 ROOT = Path(__file__).parent.parent.parent
 IMPORT_DIR = ROOT / "sync" / "import"
-DB_FILE = ROOT / "forensic.db"
+DB_FILE = ROOT / "data" / "forensic.db"
 
 
 def merge_file(conn: sqlite3.Connection, path: Path) -> tuple[int, int, int]:

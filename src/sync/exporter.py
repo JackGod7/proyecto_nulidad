@@ -8,7 +8,7 @@ from datetime import datetime
 logger = logging.getLogger(__name__)
 ROOT = Path(__file__).parent.parent.parent
 EXPORT_DIR = ROOT / "sync" / "export"
-DB_FILE = ROOT / "forensic.db"
+DB_FILE = ROOT / "data" / "forensic.db"
 
 
 def export_distrito(conn: sqlite3.Connection, distrito: str, machine_id: str) -> Path:

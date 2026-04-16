@@ -1,5 +1,5 @@
 """Tests para el extractor de datos ONPE."""
-from src.extractor import extraer_archivos, extraer_fila_mesa, extraer_votos_top5
+from src.extraction.extractor import extraer_archivos, extraer_fila_mesa, extraer_votos_top5
 
 
 DETALLE_SAMPLE = [

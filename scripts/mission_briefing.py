@@ -11,7 +11,7 @@ if sys.platform == "win32":
 
 ROOT = Path(__file__).parent.parent
 CONFIG_FILE = ROOT / "machine_config.json"
-DB_FILE = ROOT / "forensic.db"
+DB_FILE = ROOT / "data" / "forensic.db"
 
 SEPARATOR = "=" * 60
 
@@ -33,8 +33,8 @@ def get_progress(distritos: list[str]) -> dict[str, dict]:
         progress = {}
         for d in distritos:
             cur.execute(
-                "SELECT COUNT(*), SUM(CASE WHEN estado='completada' THEN 1 ELSE 0 END) "
-                "FROM actas WHERE distrito=?", (d,)
+                "SELECT COUNT(*), SUM(CASE WHEN estado_computo='Resuelta' OR estado_acta LIKE 'Contabi%' THEN 1 ELSE 0 END) "
+                "FROM actas WHERE UPPER(distrito)=UPPER(?)", (d,)
             )
             row = cur.fetchone()
             total, done = (row[0] or 0), (row[1] or 0)
@@ -52,12 +52,12 @@ def get_extraction_progress(distritos: list[str]) -> tuple[int, int]:
     try:
         conn = sqlite3.connect(DB_FILE)
         cur = conn.cursor()
-        placeholders = ",".join("?" * len(distritos))
+        upper_d = [d.upper() for d in distritos]
+        placeholders = ",".join("?" * len(upper_d))
         cur.execute(
-            f"SELECT COUNT(*), SUM(CASE WHEN hora_instalacion IS NOT NULL THEN 1 ELSE 0 END) "
-            f"FROM pdfs p JOIN actas a ON a.id=p.acta_id "
-            f"WHERE a.distrito IN ({placeholders}) AND p.tipo_acta='INSTALACION'",
-            distritos
+            f"SELECT COUNT(*), SUM(gemini_extraido) "
+            f"FROM pdfs WHERE UPPER(distrito) IN ({placeholders}) AND tipo=3",
+            upper_d
         )
         row = cur.fetchone()
         conn.close()
