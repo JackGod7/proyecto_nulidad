@@ -8,3 +8,4 @@ __pycache__/
 dist/
 image1.png
 image2.png
+.env
