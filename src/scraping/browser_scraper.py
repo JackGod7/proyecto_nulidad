@@ -379,19 +379,24 @@ async def fase1_distrito(
 async def fase2_distrito(
     page: Page, nombre: str, sem: asyncio.Semaphore,
 ) -> int:
-    """Fase 2: descarga PDFs pendientes de un distrito."""
+    """Fase 2 v2: descarga PDFs + SHA-256 hash inmediato."""
     async with sem:
-        pendientes = db.pdfs_pendientes(nombre)
+        conn = get_conn()
+        pendientes = [dict(r) for r in conn.execute(
+            "SELECT archivo_id, acta_id, mesa, tipo, nombre_destino FROM pdfs WHERE distrito=? AND descargado=0",
+            (nombre,),
+        ).fetchall()]
+        conn.close()
+
         if not pendientes:
             return 0
 
-        logger.info(">>> F2 %s: %d PDFs pendientes", nombre, len(pendientes))
+        logger.info(">>> F2v2 %s: %d PDFs pendientes", nombre, len(pendientes))
         distrito_dir = DATA_DIR / nombre
         distrito_dir.mkdir(parents=True, exist_ok=True)
 
         descargados = 0
 
-        # Batch: obtener URLs firmadas
         for batch_start in range(0, len(pendientes), BATCH_SIZE):
             batch = pendientes[batch_start:batch_start + BATCH_SIZE]
             arch_ids = [p["archivo_id"] for p in batch]
@@ -399,7 +404,6 @@ async def fase2_distrito(
             try:
                 urls = await batch_fetch_signed_urls(page, arch_ids)
 
-                # Preparar downloads
                 downloads = []
                 for i, u in enumerate(urls):
                     if u["ok"] and u["url"]:
@@ -407,30 +411,43 @@ async def fase2_distrito(
                             "url": u["url"],
                             "destino": str(distrito_dir / batch[i]["nombre_destino"]),
                             "archivo_id": batch[i]["archivo_id"],
-                            "acta_id": batch[i].get("acta_id", 0),
+                            "acta_id": batch[i]["acta_id"],
                             "mesa": batch[i]["mesa"],
-                            "tipo": batch[i].get("tipo", 0),
+                            "tipo": batch[i]["tipo"],
                             "nombre_destino": batch[i]["nombre_destino"],
                         })
 
                 if downloads:
                     results = await batch_download_pdfs(page, downloads)
+                    conn = get_conn()
                     for d in results:
-                        db.registrar_pdf(
-                            archivo_id=d["archivo_id"],
-                            acta_id=d.get("acta_id", 0),
-                            mesa=d["mesa"],
-                            distrito=nombre,
-                            tipo=d.get("tipo", 0),
-                            nombre_destino=d["nombre_destino"],
-                            descargado=d.get("downloaded", False),
-                            tamano=d.get("size", 0),
-                        )
+                        # SHA-256 hash inmediato
+                        sha = ""
+                        size = d.get("size", 0)
+                        if d.get("downloaded"):
+                            from src.audit.integrity import sha256_file
+                            fpath = Path(d["destino"])
+                            if fpath.exists():
+                                sha = sha256_file(fpath)
+                                size = fpath.stat().st_size
+
+                        conn.execute("""
+                            UPDATE pdfs SET
+                                descargado=?, tamano_bytes=?, sha256_hash=?,
+                                hash_calculado_at=datetime('now'), archivo_en_disco=?,
+                                descarga_at=datetime('now')
+                            WHERE archivo_id=?
+                        """, (
+                            1 if d.get("downloaded") else 0, size, sha or None,
+                            1 if d.get("downloaded") else 0, d["archivo_id"],
+                        ))
                         if d.get("downloaded"):
                             descargados += 1
+                    conn.commit()
+                    conn.close()
 
             except Exception as e:
-                logger.error("  F2 batch error %s: %s", nombre, e)
+                logger.error("  F2v2 batch error %s: %s", nombre, e)
 
             await rdelay(0.3)
 
