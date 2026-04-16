@@ -107,9 +107,17 @@ Auditoría archivo por archivo. Enfoque Musk: cada archivo tiene un **dueño** y
 | `forensic.db` | **USADO** | DB SQLite v2 forense — 26,800+ actas (172 MB) |
 | `forensic.db-shm` | USADO | SQLite WAL shared memory |
 | `forensic.db-wal` | USADO | SQLite WAL log |
-| `ANCÓN/` | USADO | PDFs distrito ANCÓN (~311 archivos, 140 MB) |
+| `distritos/` | **USADO** | Carpeta contenedora de PDFs por distrito |
+
+### data/distritos/ — PDFs organizados
+| Carpeta | Estado | Función |
+|---------|--------|---------|
+| `ANCÓN/` | USADO | PDFs ANCÓN (~311 archivos, 140 MB) |
 | `MIRAFLORES/` | USADO | PDFs MIRAFLORES (~1293, 648 MB) |
 | `SAN JUAN DE MIRAFLORES/` | USADO | PDFs SJM (~2023, 920 MB) |
+| `<FUTUROS>/` | — | Nuevos distritos se crean automáticamente aquí |
+
+**Ruta controlada por una sola constante:** `src/config.py::PDFS_DIR = DATA_DIR / "distritos"`.
 
 ### data/exports/ — CSVs derivados
 | Archivo | Estado | Función |

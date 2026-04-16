@@ -38,7 +38,9 @@ CANDIDATOS_TOP5 = {
 # Paths
 PROJECT_ROOT = Path(__file__).parent.parent
 DATA_DIR = PROJECT_ROOT / "data"
-DATASET_CSV = DATA_DIR / "dataset_lima_provincia.csv"
-ACTAS_SIN_PDF = DATA_DIR / "actas_sin_pdf.csv"
-HORAS_CSV = DATA_DIR / "horas_instalacion.csv"
+PDFS_DIR = DATA_DIR / "distritos"        # PDFs organizados por distrito (una sola fuente de verdad)
+FORENSIC_DB = DATA_DIR / "forensic.db"
+DATASET_CSV = DATA_DIR / "legacy" / "dataset_lima_provincia.csv"
+ACTAS_SIN_PDF = DATA_DIR / "exports" / "actas_sin_pdf.csv"
+HORAS_CSV = DATA_DIR / "exports" / "horas_instalacion.csv"
 CHECKPOINT_DIR = DATA_DIR / ".checkpoints"

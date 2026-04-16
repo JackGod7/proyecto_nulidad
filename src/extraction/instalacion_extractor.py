@@ -145,8 +145,8 @@ def procesar_instalaciones(
     for i, row in enumerate(rows, 1):
         raw_path = Path(row["nombre_destino"])
         if not raw_path.is_absolute():
-            from src.config import DATA_DIR
-            pdf_path = DATA_DIR / row["distrito"].upper() / raw_path.name
+            from src.config import PDFS_DIR
+            pdf_path = PDFS_DIR / row["distrito"].upper() / raw_path.name
         else:
             pdf_path = raw_path
 

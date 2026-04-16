@@ -16,6 +16,7 @@ from src.config import (
     DATASET_CSV,
     ID_AMBITO,
     ID_ELECCION,
+    PDFS_DIR,
     UBIGEO_LIMA_PROVINCIA,
 )
 from src.extraction.extractor import (
@@ -392,7 +393,7 @@ async def fase2_distrito(
             return 0
 
         logger.info(">>> F2v2 %s: %d PDFs pendientes", nombre, len(pendientes))
-        distrito_dir = DATA_DIR / nombre
+        distrito_dir = PDFS_DIR / nombre
         distrito_dir.mkdir(parents=True, exist_ok=True)
 
         descargados = 0
