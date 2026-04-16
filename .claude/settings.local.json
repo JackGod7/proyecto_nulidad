@@ -16,7 +16,15 @@
       "Grep(**)",
       "Bash(grep -oP 'https?://[^\"'\\\\''`,;\\\\s}]+backend[^\"'\\\\''`,;\\\\s}]*')",
       "Bash(grep -oP 'https?://[^\\\\s\"'\\\\''`,;\\)}\\\\]]+')",
-      "Read(//tmp/**)"
+      "Read(//tmp/**)",
+      "Bash(tasklist)",
+      "Bash(wmic process *)",
+      "Bash(taskkill *)",
+      "Bash(wmic logicaldisk *)",
+      "Bash(powershell -c \"Get-PSDrive -PSProvider FileSystem | Format-Table Name,Used,Free,Root -AutoSize\")",
+      "Bash(powershell *)",
+      "Bash(sqlite3 *)",
+      "Bash(python3 *)"
     ]
   },
   "disabledMcpjsonServers": [
