@@ -127,9 +127,25 @@ En máquina principal ejecutar:
 uv run python src/sync/merger.py
 ```
 
-## Asignación de Distritos (43 Lima)
-| Máquina | Distritos |
-|---------|-----------|
-| MAQUINA_1 | ANCON, ATE, BARRANCO, BREÑA, CARABAYLLO, CHACLACAYO, CHORRILLOS, CIENEGUILLA, COMAS, EL AGUSTINO, INDEPENDENCIA, JESUS MARIA, LA MOLINA, LA VICTORIA |
-| MAQUINA_2 | LIMA, LINCE, LOS OLIVOS, LURIGANCHO, LURIN, MAGDALENA DEL MAR, MIRAFLORES, PACHACAMAC, PUCUSANA, PUEBLO LIBRE, PUENTE PIEDRA, PUNTA HERMOSA, PUNTA NEGRA, RIMAC |
-| MAQUINA_3 | SAN BARTOLO, SAN BORJA, SAN ISIDRO, SAN JUAN DE LURIGANCHO, SAN JUAN DE MIRAFLORES, SAN LUIS, SAN MARTIN DE PORRES, SAN MIGUEL, SANTA ANITA, SANTA MARIA DEL MAR, SANTA ROSA, SANTIAGO DE SURCO, SURQUILLO, VILLA EL SALVADOR, VILLA MARIA DEL TRIUNFO |
+## LOTE 1 — Distritos Prioritarios (6 Lima Sur)
+Distritos con apertura tardía confirmada 12-abr-2026. Evidencia forense más sólida.
+
+| # | Distrito | Locales pendientes | Prioridad |
+|---|----------|---------------------|-----------|
+| 1 | SAN JUAN DE MIRAFLORES | 15 | CRITICA |
+| 2 | LURIN | 12 | CRITICA |
+| 3 | PACHACAMAC | 9 | ALTA |
+| 4 | CIENEGUILLA | 7 | ALTA |
+| 5 | PUCUSANA | 6 | ALTA |
+| 6 | VILLA EL SALVADOR | 5 | ALTA |
+
+### Distribución sugerida 3 máquinas (Lote 1)
+| Máquina | Distritos | Carga estimada |
+|---------|-----------|----------------|
+| MAQUINA_PRINCIPAL | SAN JUAN DE MIRAFLORES, VILLA EL SALVADOR | Alta (2 grandes) |
+| MAQUINA_2 | LURIN, PACHACAMAC | Media |
+| MAQUINA_3 | CIENEGUILLA, PUCUSANA | Baja (permite apoyar otros) |
+
+## LOTE 2 — Siguientes 6 (demoras sin cifras oficiales)
+VILLA MARIA DEL TRIUNFO, MIRAFLORES, SAN ISIDRO, SANTIAGO DE SURCO, SAN BORJA, PUNTA HERMOSA.
+Activar SOLO tras completar Lote 1.

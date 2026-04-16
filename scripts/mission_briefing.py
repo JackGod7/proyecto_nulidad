@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
-"""SessionStart hook — muestra misión al abrir el proyecto en Claude Code."""
+"""SessionStart hook - muestra mision al abrir el proyecto en Claude Code."""
 import json
 import sqlite3
 import sys
+import io
 from pathlib import Path
+
+if sys.platform == "win32":
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
 ROOT = Path(__file__).parent.parent
 CONFIG_FILE = ROOT / "machine_config.json"
