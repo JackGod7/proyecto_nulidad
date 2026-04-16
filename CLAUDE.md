@@ -83,3 +83,53 @@ Base: `https://resultadoelectoral.onpe.gob.pe/presentacion-backend`
 - Rate limit: delays aleatorios 0.3-1.0s a ONPE
 - SHA-256 de TODO PDF descargado
 - Cadena de custodia en TODA operación
+
+## Setup Máquina Nueva (Worker)
+
+### 1. Clonar y preparar
+```bash
+git clone https://github.com/JackGod7/proyecto_nulidad.git
+cd proyecto_nulidad
+cp .env.example .env          # editar con GEMINI_API_KEY
+cp machine_config.example.json machine_config.json  # editar con distritos asignados
+uv sync
+uv run playwright install chromium
+```
+
+### 2. machine_config.json — campos obligatorios
+```json
+{
+  "machine_id": "MAQUINA_2",        ← nombre único de esta máquina
+  "distritos": ["MIRAFLORES", ...], ← lista asignada por Tony
+  "rol": "worker"
+}
+```
+
+### 3. Flujo de trabajo (en orden)
+```bash
+# FASE 1 — scraping actas (obtiene metadata + votos de API ONPE)
+uv run python -c "from src.scraping.browser_scraper import main; import asyncio; asyncio.run(main(fase=1, workers=5))"
+
+# FASE 2 — descargar PDFs de instalacion
+uv run python -c "from src.scraping.browser_scraper import main; import asyncio; asyncio.run(main(fase=2, workers=3))"
+
+# FASE 3 — extracción entidades con Gemini
+uv run python src/extraction/instalacion_extractor.py
+
+# FASE 4 — exportar para sync
+uv run python src/sync/exporter.py
+```
+
+### 4. Sincronizar con máquina principal
+Copiar archivos `sync/export/*.json` a la máquina principal en `sync/import/`.
+En máquina principal ejecutar:
+```bash
+uv run python src/sync/merger.py
+```
+
+## Asignación de Distritos (43 Lima)
+| Máquina | Distritos |
+|---------|-----------|
+| MAQUINA_1 | ANCON, ATE, BARRANCO, BREÑA, CARABAYLLO, CHACLACAYO, CHORRILLOS, CIENEGUILLA, COMAS, EL AGUSTINO, INDEPENDENCIA, JESUS MARIA, LA MOLINA, LA VICTORIA |
+| MAQUINA_2 | LIMA, LINCE, LOS OLIVOS, LURIGANCHO, LURIN, MAGDALENA DEL MAR, MIRAFLORES, PACHACAMAC, PUCUSANA, PUEBLO LIBRE, PUENTE PIEDRA, PUNTA HERMOSA, PUNTA NEGRA, RIMAC |
+| MAQUINA_3 | SAN BARTOLO, SAN BORJA, SAN ISIDRO, SAN JUAN DE LURIGANCHO, SAN JUAN DE MIRAFLORES, SAN LUIS, SAN MARTIN DE PORRES, SAN MIGUEL, SANTA ANITA, SANTA MARIA DEL MAR, SANTA ROSA, SANTIAGO DE SURCO, SURQUILLO, VILLA EL SALVADOR, VILLA MARIA DEL TRIUNFO |

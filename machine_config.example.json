@@ -1,0 +1,11 @@
+{
+  "machine_id": "MAQUINA_1",
+  "owner": "Tony",
+  "distritos": [
+    "ANCON", "ATE", "BARRANCO", "BREÑA", "CARABAYLLO",
+    "CHACLACAYO", "CHORRILLOS", "CIENEGUILLA", "COMAS",
+    "EL AGUSTINO", "INDEPENDENCIA", "JESUS MARIA", "LA MOLINA", "LA VICTORIA"
+  ],
+  "rol": "worker",
+  "notas": "Copiar a machine_config.json y ajustar machine_id y distritos"
+}
