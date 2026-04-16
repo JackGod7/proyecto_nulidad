@@ -84,48 +84,52 @@ Base: `https://resultadoelectoral.onpe.gob.pe/presentacion-backend`
 - SHA-256 de TODO PDF descargado
 - Cadena de custodia en TODA operación
 
-## Setup Máquina Nueva (Worker)
+## QUICKSTART Máquina Nueva (3 pasos)
 
-### 1. Clonar y preparar
 ```bash
 git clone https://github.com/JackGod7/proyecto_nulidad.git
 cd proyecto_nulidad
-cp .env.example .env          # editar con GEMINI_API_KEY
-cp machine_config.example.json machine_config.json  # editar con distritos asignados
-uv sync
-uv run playwright install chromium
+bash scripts/setup_machine.sh
 ```
 
-### 2. machine_config.json — campos obligatorios
-```json
-{
-  "machine_id": "MAQUINA_2",        ← nombre único de esta máquina
-  "distritos": ["MIRAFLORES", ...], ← lista asignada por Tony
-  "rol": "worker"
-}
-```
+Luego editar dos archivos:
+- `.env` → pegar `GEMINI_API_KEY`
+- `machine_config.json` → ajustar `machine_id` y `distritos` según tabla abajo
 
-### 3. Flujo de trabajo (en orden)
+Finalmente abrir Claude Code:
 ```bash
-# FASE 1 — scraping actas (obtiene metadata + votos de API ONPE)
-uv run python -c "from src.scraping.browser_scraper import main; import asyncio; asyncio.run(main(fase=1, workers=5))"
-
-# FASE 2 — descargar PDFs de instalacion
-uv run python -c "from src.scraping.browser_scraper import main; import asyncio; asyncio.run(main(fase=2, workers=3))"
-
-# FASE 3 — extracción entidades con Gemini
-uv run python src/extraction/instalacion_extractor.py
-
-# FASE 4 — exportar para sync
-uv run python src/sync/exporter.py
+claude
 ```
 
-### 4. Sincronizar con máquina principal
-Copiar archivos `sync/export/*.json` a la máquina principal en `sync/import/`.
-En máquina principal ejecutar:
+Dentro de Claude, ejecutar **un solo comando**:
+```
+/iniciar
+```
+
+El hook `SessionStart` ya muestra el briefing automático al abrir. `/iniciar` lo re-ejecuta y guía el siguiente paso.
+
+## Comandos Claude disponibles
+
+| Comando | Qué hace |
+|---------|----------|
+| `/iniciar` | Muestra estado + distrito asignado + siguiente acción |
+| `/trabajar [DISTRITO]` | Pipeline completo: scrape → pdfs → extraer |
+| `/sync` | Exporta JSON locales y los commitea al repo |
+
+## Sync entre máquinas (via repo git)
+
+Cada máquina worker:
+```
+/sync     ← exporta + push a GitHub
+```
+
+Máquina principal:
 ```bash
+git pull
 uv run python src/sync/merger.py
 ```
+
+Los JSON viajan por el repo (`sync/export/*.json`), no se pierden.
 
 ## LOTE 1 — Distritos Prioritarios (6 Lima Sur)
 Distritos con apertura tardía confirmada 12-abr-2026. Evidencia forense más sólida.

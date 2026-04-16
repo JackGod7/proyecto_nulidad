@@ -10,7 +10,7 @@ image1.png
 image2.png
 .env
 machine_config.json
-sync/export/
 sync/import/
 forensic.db
 *.db
+# sync/export/ SI se commitea para compartir entre maquinas
