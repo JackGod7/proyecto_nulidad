@@ -13,4 +13,5 @@ machine_config.json
 sync/import/
 forensic.db
 *.db
+.ruff_cache/
 # sync/export/ SI se commitea para compartir entre maquinas
