@@ -18,8 +18,13 @@ from src.config import (
     ID_ELECCION,
     UBIGEO_LIMA_PROVINCIA,
 )
-from src.extractor import extraer_archivos, extraer_fila_mesa
-from src import progress_db as db
+from src.extraction.extractor import (
+    extraer_archivos,
+    extraer_fila_completa,
+    extraer_fila_mesa,
+    extraer_votos_normalizados,
+)
+from src.db.schema import get_conn, init_forensic_db, log_custodia, FORENSIC_DB
 
 logging.basicConfig(
     level=logging.INFO,
@@ -29,10 +34,10 @@ logger = logging.getLogger(__name__)
 
 BASE_URL = "https://resultadoelectoral.onpe.gob.pe"
 API = "/presentacion-backend"
-BATCH_SIZE = 10
+BATCH_SIZE = 15
 MAX_WORKERS = 5
-DELAY_MIN = 0.5
-DELAY_MAX = 1.5
+DELAY_MIN = 0.3
+DELAY_MAX = 1.0
 
 # Distritos prioritarios (Lima Centro/Sur primero)
 PRIORITY = [
@@ -219,28 +224,41 @@ async def obtener_actas_distrito(page: Page, ubigeo: str) -> list[dict]:
 async def fase1_distrito(
     page: Page, ubigeo: str, nombre: str, sem: asyncio.Semaphore,
 ) -> tuple[list[dict], list[dict]]:
-    """Fase 1: extrae datos de votos con batch fetching."""
+    """Fase 1 v2: extrae ALL partidos, ALL campos, raw JSON, hash."""
     async with sem:
-        estado = db.distrito_estado(ubigeo)
-        if estado == "completado":
-            logger.info("SKIP %s (completado)", nombre)
+        conn = get_conn()
+
+        # Check si ya completado en v2
+        row = conn.execute("SELECT estado FROM distritos WHERE ubigeo=?", (ubigeo,)).fetchone()
+        estado = row["estado"] if row else "pendiente"
+        if estado == "completado_v2":
+            logger.info("SKIP %s (completado_v2)", nombre)
+            conn.close()
             return [], []
 
-        logger.info(">>> F1 %s (ubigeo=%s)", nombre, ubigeo)
+        logger.info(">>> F1v2 %s (ubigeo=%s)", nombre, ubigeo)
 
         actas = await obtener_actas_distrito(page, ubigeo)
         pres = [a for a in actas if a.get("idEleccion") == ID_ELECCION]
         logger.info("  %s: %d presidenciales", nombre, len(pres))
-        db.iniciar_distrito(ubigeo, len(actas), len(pres))
 
-        # Filtrar actas no procesadas
-        ids_nuevos = [a["id"] for a in pres if not db.acta_ya_procesada(a["id"])]
-        logger.info("  %s: %d nuevas (skip %d ya procesadas)", nombre, len(ids_nuevos), len(pres) - len(ids_nuevos))
+        conn.execute(
+            "UPDATE distritos SET total_actas=?, presidenciales=?, estado='en_progreso_v2', inicio_at=datetime('now') WHERE ubigeo=?",
+            (len(actas), len(pres), ubigeo),
+        )
+        conn.commit()
+
+        # Filtrar actas ya procesadas en v2 (tienen api_response_raw)
+        ya_v2 = {r[0] for r in conn.execute(
+            "SELECT acta_id FROM actas WHERE ubigeo=? AND api_response_raw IS NOT NULL", (ubigeo,)
+        ).fetchall()}
+        ids_nuevos = [a["id"] for a in pres if a["id"] not in ya_v2]
+        logger.info("  %s: %d nuevas (skip %d v2)", nombre, len(ids_nuevos), len(pres) - len(ids_nuevos))
 
         filas = []
         sin_pdf = []
+        procesadas = 0
 
-        # Procesar en batches
         for batch_start in range(0, len(ids_nuevos), BATCH_SIZE):
             batch_ids = ids_nuevos[batch_start:batch_start + BATCH_SIZE]
 
@@ -249,61 +267,109 @@ async def fase1_distrito(
 
                 for r in results:
                     acta_id = r["id"]
-                    mesa = ""
                     try:
                         if not r["ok"]:
-                            db.error_acta(acta_id, "", ubigeo, nombre, str(r["data"]))
+                            conn.execute(
+                                "INSERT OR REPLACE INTO actas (acta_id, mesa, ubigeo, distrito, error) VALUES (?,?,?,?,?)",
+                                (acta_id, "", ubigeo, nombre, str(r["data"])),
+                            )
                             continue
 
-                        detalle = r["data"].get("data", r["data"])
-                        mesa = detalle.get("codigoMesa", "")
-                        estado_acta = detalle.get("descripcionEstadoActa", "")
-                        fila = extraer_fila_mesa(detalle)
+                        api_response = r["data"]
+                        fila = extraer_fila_completa(api_response)
                         filas.append(fila)
 
-                        archivos = extraer_archivos(detalle)
-                        tiene_datos = bool(detalle.get("detalle"))
+                        # Guardar acta completa en forensic.db
+                        conn.execute("""
+                            INSERT OR REPLACE INTO actas
+                            (acta_id, mesa, ubigeo, distrito, departamento, provincia,
+                             local_votacion, codigo_local_votacion,
+                             estado_acta, codigo_estado_acta, estado_acta_resolucion,
+                             estado_descripcion_resolucion, sub_estado_acta, estado_computo,
+                             solucion_tecnologica,
+                             total_electores, total_votantes, votos_emitidos, votos_validos,
+                             participacion_pct,
+                             votos_todos_json, votos_blanco, votos_nulos, votos_impugnados,
+                             tiene_pdf_escrutinio, tiene_pdf_instalacion, tiene_pdf_sufragio,
+                             api_response_raw, api_response_hash,
+                             tiene_datos, captura_version, operador, maquina, capturado_at)
+                            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,datetime('now'))
+                        """, (
+                            acta_id, fila["mesa"], ubigeo, nombre,
+                            fila["departamento"], fila["provincia"],
+                            fila["local_votacion"], fila["codigo_local_votacion"],
+                            fila["estado_acta"], fila["codigo_estado_acta"],
+                            fila["estado_acta_resolucion"], fila["estado_descripcion_resolucion"],
+                            fila["sub_estado_acta"], fila["estado_computo"],
+                            fila["solucion_tecnologica"],
+                            fila["total_electores"], fila["total_votantes"],
+                            fila["votos_emitidos"], fila["votos_validos"],
+                            fila["participacion_pct"],
+                            fila["votos_todos_json"], fila["votos_blanco"],
+                            fila["votos_nulos"], fila["votos_impugnados"],
+                            fila["tiene_pdf_escrutinio"], fila["tiene_pdf_instalacion"],
+                            fila["tiene_pdf_sufragio"],
+                            fila["api_response_raw"], fila["api_response_hash"],
+                            fila["tiene_datos"], "2.0.0", fila["operador"], fila["maquina"],
+                        ))
 
-                        db.registrar_acta(
-                            acta_id=acta_id, mesa=mesa, ubigeo=ubigeo,
-                            distrito=nombre, estado_acta=estado_acta,
-                            votos=fila, tiene_datos=tiene_datos,
-                        )
+                        # Votos normalizados (ALL partidos)
+                        acta_data = api_response.get("data", api_response)
+                        votos_norm = extraer_votos_normalizados(acta_data.get("detalle", []))
+                        for v in votos_norm:
+                            conn.execute("""
+                                INSERT OR REPLACE INTO votos_por_mesa
+                                (acta_id, partido_nombre, partido_codigo, candidato_nombre,
+                                 candidato_documento, votos, porcentaje_validos,
+                                 porcentaje_emitidos, posicion_cedula, fuente)
+                                VALUES (?,?,?,?,?,?,?,?,?,?)
+                            """, (
+                                acta_id, v["partido_nombre"], v["partido_codigo"],
+                                v["candidato_nombre"], v["candidato_documento"],
+                                v["votos"], v["porcentaje_validos"],
+                                v["porcentaje_emitidos"], v["posicion_cedula"], "api",
+                            ))
 
-                        # Registrar archivos para fase 2 (sin descargar)
+                        # Registrar archivos
+                        archivos = extraer_archivos(acta_data)
                         if not archivos:
-                            sin_pdf.append({
-                                "MESA": mesa, "DISTRITO": nombre,
-                                "ESTADO": estado_acta, "ACTA_ID": acta_id,
-                            })
+                            sin_pdf.append({"MESA": fila["mesa"], "DISTRITO": nombre,
+                                           "ESTADO": fila["estado_acta"], "ACTA_ID": acta_id})
                         else:
                             for arch in archivos:
-                                if not db.pdf_ya_descargado(arch["archivo_id"]):
-                                    db.registrar_pdf(
-                                        archivo_id=arch["archivo_id"],
-                                        acta_id=acta_id, mesa=mesa,
-                                        distrito=nombre, tipo=arch["tipo"],
-                                        nombre_destino=arch["nombre_destino"],
-                                        descargado=False, tamano=0,
-                                    )
+                                conn.execute("""
+                                    INSERT OR IGNORE INTO pdfs
+                                    (archivo_id, acta_id, mesa, distrito, tipo, nombre_destino)
+                                    VALUES (?,?,?,?,?,?)
+                                """, (arch["archivo_id"], acta_id, fila["mesa"],
+                                      nombre, arch["tipo"], arch["nombre_destino"]))
 
-                        db.incrementar_procesadas(ubigeo)
+                        procesadas += 1
 
                     except Exception as e:
                         logger.error("  Error acta %d: %s", acta_id, e)
-                        db.error_acta(acta_id, mesa, ubigeo, nombre, str(e))
 
             except Exception as e:
-                logger.error("  Batch error en %s: %s", nombre, e)
+                logger.error("  Batch error %s: %s", nombre, e)
 
-            processed = min(batch_start + BATCH_SIZE, len(ids_nuevos))
-            if processed % 50 == 0 or processed == len(ids_nuevos):
-                logger.info("  %s: %d/%d", nombre, processed, len(ids_nuevos))
+            conn.commit()
+            done = min(batch_start + BATCH_SIZE, len(ids_nuevos))
+            if done % 50 == 0 or done == len(ids_nuevos):
+                logger.info("  %s: %d/%d", nombre, done, len(ids_nuevos))
 
-            await rdelay(0.5)
+            await rdelay(0.3)
 
-        db.completar_distrito(ubigeo, len(filas), len(sin_pdf), 0)
-        logger.info("<<< F1 %s DONE: datos=%d sin_pdf=%d", nombre, len(filas), len(sin_pdf))
+        conn.execute(
+            "UPDATE distritos SET estado='completado_v2', procesadas=?, con_datos=?, sin_pdf=?, fin_at=datetime('now') WHERE ubigeo=?",
+            (procesadas + len(ya_v2), procesadas, len(sin_pdf), ubigeo),
+        )
+        log_custodia(conn, "FASE1_COMPLETA", "distrito", ubigeo, {
+            "nombre": nombre, "procesadas": procesadas, "sin_pdf": len(sin_pdf),
+        })
+        conn.commit()
+        conn.close()
+
+        logger.info("<<< F1v2 %s DONE: datos=%d sin_pdf=%d", nombre, procesadas, len(sin_pdf))
         return filas, sin_pdf
 
 
@@ -388,7 +454,7 @@ async def main(
     filtro_distritos: lista de nombres para procesar solo esos
     """
     DATA_DIR.mkdir(parents=True, exist_ok=True)
-    db.init_db()
+    init_forensic_db()
 
     sem = asyncio.Semaphore(workers)
 
@@ -408,8 +474,12 @@ async def main(
             distritos = distritos[:2]
             logger.info("TEST: %s", [d["nombre"] for d in distritos])
 
+        conn = get_conn()
         for d in distritos:
-            db.registrar_distrito(d["ubigeo"], d["nombre"])
+            conn.execute("INSERT OR IGNORE INTO distritos (ubigeo, nombre) VALUES (?,?)",
+                        (d["ubigeo"], d["nombre"]))
+        conn.commit()
+        conn.close()
 
         # Crear pages para workers
         pages = [main_page]
@@ -466,8 +536,17 @@ async def main(
 
         await browser.close()
 
-    progreso = db.resumen_progreso()
-    logger.info("RESUMEN: %s", json.dumps(progreso, indent=2, ensure_ascii=False))
+    conn = get_conn()
+    r = conn.execute("""
+        SELECT COUNT(*) as total,
+            SUM(CASE WHEN estado LIKE 'completado%' THEN 1 ELSE 0 END) as ok,
+            SUM(procesadas) as actas
+        FROM distritos
+    """).fetchone()
+    partidos = conn.execute("SELECT COUNT(DISTINCT partido_nombre) FROM votos_por_mesa").fetchone()[0]
+    conn.close()
+    logger.info("RESUMEN: %d/%d distritos, %d actas, %d partidos detectados",
+                r["ok"], r["total"], r["actas"] or 0, partidos)
 
 
 if __name__ == "__main__":
