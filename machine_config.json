@@ -1,0 +1,9 @@
+{
+  "_comment": "MAQUINA_3 - Lote 1 Lima Sur (CIENEGUILLA + PUCUSANA). Rama git: maquina-3",
+  "machine_id": "MAQUINA_3",
+  "owner": "Tony",
+  "lote": 1,
+  "distritos": ["CIENEGUILLA", "PUCUSANA"],
+  "rol": "worker",
+  "fase_actual": "scraping"
+}
