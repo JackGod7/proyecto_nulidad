@@ -23,7 +23,7 @@ def export_distrito(conn: sqlite3.Connection, distrito: str, machine_id: str) ->
     actas = [dict(zip(cols, row)) for row in cur.fetchall()]
 
     # Votos
-    acta_ids = [a["id"] for a in actas]
+    acta_ids = [a["acta_id"] for a in actas]
     votos: list[dict] = []
     if acta_ids:
         placeholders = ",".join("?" * len(acta_ids))
@@ -35,8 +35,9 @@ def export_distrito(conn: sqlite3.Connection, distrito: str, machine_id: str) ->
     pdfs: list[dict] = []
     if acta_ids:
         cur.execute(
-            f"SELECT id, acta_id, tipo_acta, sha256, estado_disco, "
-            f"hora_instalacion, mesa_numero, total_electores, gemini_raw "
+            f"SELECT archivo_id, acta_id, mesa, distrito, tipo, nombre_destino, "
+            f"descargado, sha256_hash, archivo_en_disco, gemini_extraido, "
+            f"gemini_votos_json, gemini_raw_response "
             f"FROM pdfs WHERE acta_id IN ({placeholders})", acta_ids
         )
         cols_p = [d[0] for d in cur.description]
@@ -72,15 +73,21 @@ def main() -> None:
         config = json.load(f)
 
     machine_id = config["machine_id"]
-    distritos = config["distritos"]
+    distritos_config = config["distritos"]
 
     if not DB_FILE.exists():
         logger.error("forensic.db not found")
         return
 
     conn = sqlite3.connect(DB_FILE)
+
+    # Obtener distritos directamente de la DB (evita problemas encoding)
+    cur = conn.cursor()
+    cur.execute("SELECT DISTINCT distrito FROM actas")
+    distritos_db = [row[0] for row in cur.fetchall()]
+
     exported = []
-    for distrito in distritos:
+    for distrito in distritos_db:
         try:
             path = export_distrito(conn, distrito, machine_id)
             exported.append(str(path))
