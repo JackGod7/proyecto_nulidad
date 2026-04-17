@@ -23,7 +23,7 @@ def export_distrito(conn: sqlite3.Connection, distrito: str, machine_id: str) ->
     actas = [dict(zip(cols, row)) for row in cur.fetchall()]
 
     # Votos
-    acta_ids = [a["id"] for a in actas]
+    acta_ids = [a["acta_id"] for a in actas]
     votos: list[dict] = []
     if acta_ids:
         placeholders = ",".join("?" * len(acta_ids))
@@ -35,12 +35,21 @@ def export_distrito(conn: sqlite3.Connection, distrito: str, machine_id: str) ->
     pdfs: list[dict] = []
     if acta_ids:
         cur.execute(
-            f"SELECT id, acta_id, tipo_acta, sha256, estado_disco, "
-            f"hora_instalacion, mesa_numero, total_electores, gemini_raw "
+            f"SELECT archivo_id, acta_id, mesa, tipo, sha256_hash, archivo_en_disco, "
+            f"gemini_raw_response, descarga_at, error "
             f"FROM pdfs WHERE acta_id IN ({placeholders})", acta_ids
         )
         cols_p = [d[0] for d in cur.description]
         pdfs = [dict(zip(cols_p, row)) for row in cur.fetchall()]
+
+    # Instalaciones
+    cur.execute(
+        "SELECT mesa, hora_instalacion_raw, hora_instalacion_min, total_electores_habiles, "
+        "material_buen_estado, observaciones, extraido_at, error "
+        "FROM instalaciones WHERE distrito=?", (distrito,)
+    )
+    cols_i = [d[0] for d in cur.description]
+    instalaciones = [dict(zip(cols_i, row)) for row in cur.fetchall()]
 
     payload = {
         "machine_id": machine_id,
@@ -49,6 +58,7 @@ def export_distrito(conn: sqlite3.Connection, distrito: str, machine_id: str) ->
         "actas": actas,
         "votos": votos,
         "pdfs": pdfs,
+        "instalaciones": instalaciones,
     }
 
     safe_name = distrito.replace(" ", "_").upper()
@@ -88,7 +98,7 @@ def main() -> None:
             logger.error("Error exporting %s: %s", distrito, e)
     conn.close()
 
-    print(f"\n✓ Exportados {len(exported)} distritos → sync/export/")
+    print(f"\nExportados {len(exported)} distritos -> sync/export/")
     print("Copia esos archivos JSON al directorio sync/import/ de la máquina principal.")
 
 
