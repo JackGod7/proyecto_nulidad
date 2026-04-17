@@ -1,9 +1,9 @@
 {
-  "_comment": "MAQUINA_2 - Lote 1 Lima Sur (LURIN + PACHACAMAC). Rama git: maquina-2",
+  "_comment": "MAQUINA_2 - Batch 2: 7 distritos Lima. Rama git: maquina-2",
   "machine_id": "MAQUINA_2",
   "owner": "Tony",
-  "lote": 1,
-  "distritos": ["LUR�N", "PACHAC�MAC"],
+  "lote": 2,
+  "distritos": ["LURÍN", "PACHACÁMAC", "MAGDALENA DEL MAR", "PUEBLO LIBRE", "LINCE", "SAN LUIS", "BARRANCO"],
   "rol": "worker",
-  "fase_actual": "scraping"
+  "fase_actual": "extraccion"
 }
