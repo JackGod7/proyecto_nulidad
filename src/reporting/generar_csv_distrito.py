@@ -12,7 +12,15 @@ DB_FILE = ROOT / "data" / "forensic.db"
 ENTREGA = ROOT / "data" / "ENTREGA_ESTADISTICO"
 
 PARTIDOS_COLS = ["Voto_Rafael", "Voto_Nieto", "Voto_Keiko", "Voto_Belmont", "Voto_Roberto"]
-PARTIDOS_MAP = {
+# Mapeo flexible: soporta dict {partido: votos} y list [{strNombreElector, intVotos}]
+PARTIDOS_MAP_DICT = {
+    "RENOVACIÓN POPULAR": "Voto_Rafael",
+    "PARTIDO DEL BUEN GOBIERNO": "Voto_Nieto",
+    "FUERZA POPULAR": "Voto_Keiko",
+    "PARTIDO DEMOCRÁTICO SOMOS PERÚ": "Voto_Belmont",
+    "JUNTOS POR EL PERÚ": "Voto_Roberto",
+}
+PARTIDOS_MAP_LIST = {
     "RAFAEL LOPEZ ALIAGA": "Voto_Rafael",
     "JOSE ANTONIO NIETO MONTESINOS": "Voto_Nieto",
     "KEIKO SOFIA FUJIMORI HIGUCHI": "Voto_Keiko",
@@ -72,19 +80,24 @@ def generar_csv_distrito(distrito: str) -> Path | None:
         ausentes = electores - votantes if electores else 0
         aus_pct = round(ausentes / electores * 100, 2) if electores else 0
 
-        # Votos por partido
+        # Votos por partido (soporta dict y list)
         votos_partido = {c: 0 for c in PARTIDOS_COLS}
         votos_json = acta.get("votos_todos_json")
         if votos_json:
             try:
                 vj = json.loads(votos_json) if isinstance(votos_json, str) else votos_json
-                if isinstance(vj, list):
+                if isinstance(vj, dict):
+                    for partido, votos_val in vj.items():
+                        col = PARTIDOS_MAP_DICT.get(partido)
+                        if col:
+                            votos_partido[col] = int(votos_val) if votos_val else 0
+                elif isinstance(vj, list):
                     for v in vj:
                         nombre = v.get("strNombreElector", "")
-                        col = PARTIDOS_MAP.get(nombre)
+                        col = PARTIDOS_MAP_LIST.get(nombre)
                         if col:
                             votos_partido[col] = v.get("intVotos", 0)
-            except (json.JSONDecodeError, TypeError):
+            except (json.JSONDecodeError, TypeError, ValueError):
                 pass
 
         rows.append({
