@@ -17,11 +17,11 @@ Verificar en DB: `sqlite3 data/forensic.db "SELECT COUNT(*) FROM actas WHERE dis
 ```bash
 uv run python -c "from src.scraping.browser_scraper import main; import asyncio; asyncio.run(main(fase=2, workers=3, filtro_distritos=['$DISTRITO']))"
 ```
-Verificar: `ls data/$DISTRITO/ | wc -l`
+Verificar: `ls data/distritos/$DISTRITO/ | wc -l`
 
-### Fase 3 — Extracción Gemini (actas instalación)
+### Fase 3 — Extracción OpenAI gpt-4o-mini (actas instalación)
 ```bash
-uv run python src/extraction/instalacion_extractor.py --distrito "$DISTRITO"
+uv run python -m src.extraction.instalacion_extractor "$DISTRITO"
 ```
 Verificar: `sqlite3 data/forensic.db "SELECT COUNT(*) FROM instalaciones WHERE distrito='$DISTRITO' AND error IS NULL;"`
 
