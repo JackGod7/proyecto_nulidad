@@ -153,3 +153,50 @@ Distritos con apertura tardía confirmada 12-abr-2026. Evidencia forense más s�
 ## LOTE 2 — Siguientes 6 (demoras sin cifras oficiales)
 VILLA MARIA DEL TRIUNFO, MIRAFLORES, SAN ISIDRO, SANTIAGO DE SURCO, SAN BORJA, PUNTA HERMOSA.
 Activar SOLO tras completar Lote 1.
+
+---
+
+## CCA — Claude Certified Architect (5 dominios)
+
+### 1. Agentic Architecture
+- **Topología**: Hub-and-Spoke. Claude principal orquesta sub-agents (scraper-worker, ocr-reader).
+- **Fan-Out**: scraping paralelo por distrito (workers=3-5).
+- **Pipeline**: scrape → pdfs → extract → sync (comando `/trabajar`).
+- **Exit conditions**: max retries=3, backoff exponencial en 429/503.
+- **Handoff**: cada sub-agent recibe task + distrito + constraints, devuelve JSON estructurado.
+
+### 2. Claude Code Config
+- **Hooks activos**:
+  - `SessionStart` → `scripts/mission_briefing.py` (estado + distrito + siguiente acción)
+  - `PreToolUse(Bash)` → `.claude/guardrail.py` (bloqueo destructivo)
+- **Permissions**: `defaultMode: bypassPermissions` en `settings.local.json` (ejecución autónoma).
+- **Branches por máquina**: `maquina-1..6`, cada una con su `machine_config.json`.
+- **Slash commands**: `/iniciar`, `/trabajar`, `/sync` en `.claude/commands/`.
+- **Sub-agents**: `.claude/agents/scraper-worker.md`, `ocr-reader.md`.
+
+### 3. Prompt Engineering
+- **CLAUDE.md hierarchy**: global → neuracode → proyecto_nulidad (más específico gana).
+- **Modo cavernicola**: max 3-8 palabras/bullet, 0 relleno.
+- **Structured output**: JSON para sync (`sync/export/*.json`), no prosa.
+- **Few-shot**: extractor Gemini con ejemplos de actas reales.
+- **Role + task + constraints**: patrón obligatorio en `/trabajar [DISTRITO]`.
+
+### 4. MCP & Tools
+- **MCP activos (global)**: engram (memoria persistente), drawio (diagramas).
+- **MCP deshabilitados**: Vercel, Vercel Next Dev Tools (no aplica aquí).
+- **Tools propias**:
+  - `browser_scraper` (Playwright stealth → API ONPE)
+  - `gemini_extractor` (PDF → JSON estructurado)
+  - `custody` (cadena de custodia SQLite)
+- **Principio**: una tool = una acción. Idempotente. Inputs validados server-side.
+
+### 5. Context & Reliability
+- **Prioridad contexto**: CLAUDE.md proyecto > global > rules > memoria > tool results.
+- **Pollution prevention**: Grep con `head_limit`, Read con `offset+limit`, diffs acotados.
+- **Retry strategy**:
+  - Transient (network ONPE): 3x backoff exponencial
+  - Parse error (Gemini): 1x con instrucciones de formato
+  - Budget exceeded: reportar progreso + stop graceful
+- **Memoria persistente**: `~/.claude/projects/.../memory/MEMORY.md` (índice + entries por dominio).
+- **Observabilidad**: `cadena_custodia` SQLite + logs estructurados.
+- **Guardrails**: `.claude/guardrail.py` bloquea rm destructivo, git --force, DROP SQL, fork bombs.
