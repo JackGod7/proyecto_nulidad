@@ -10,26 +10,29 @@
           }
         ]
       }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python .claude/guardrail.py"
+          }
+        ]
+      }
     ]
   },
   "permissions": {
     "allow": [
-      "Bash(uv *)",
-      "Bash(python *)",
-      "Bash(python3 *)",
-      "Bash(rtk *)",
-      "Bash(sqlite3 *)",
-      "Bash(git status)",
-      "Bash(git log *)",
-      "Bash(git diff *)",
-      "Bash(mkdir *)",
-      "Bash(ls *)",
-      "Bash(cat *)",
+      "Bash(*)",
       "Read(**)",
       "Write(**)",
       "Edit(**)",
       "Glob(**)",
-      "Grep(**)"
+      "Grep(**)",
+      "WebSearch",
+      "WebFetch"
     ]
   }
 }
