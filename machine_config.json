@@ -3,7 +3,7 @@
   "machine_id": "MAQUINA_2",
   "owner": "Tony",
   "lote": 1,
-  "distritos": ["LURIN", "PACHACAMAC"],
+  "distritos": ["LUR�N", "PACHAC�MAC"],
   "rol": "worker",
   "fase_actual": "scraping"
 }

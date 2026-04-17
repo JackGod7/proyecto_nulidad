@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 
 BASE_URL = "https://resultadoelectoral.onpe.gob.pe"
 API = "/presentacion-backend"
-BATCH_SIZE = 15
+BATCH_SIZE = 3  # Reducido: descarga 1 por 1, evita OOM
 MAX_WORKERS = 5
 DELAY_MIN = 0.3
 DELAY_MAX = 1.0
@@ -132,49 +132,54 @@ async def batch_fetch_detalles(page: Page, acta_ids: list[int]) -> list[dict]:
 
 
 async def batch_fetch_signed_urls(page: Page, archivo_ids: list[str]) -> list[dict]:
-    """Fetch N URLs firmadas S3 en paralelo."""
-    ids_json = json.dumps(archivo_ids)
-    results = await page.evaluate(f"""async () => {{
-        const ids = {ids_json};
-        const results = await Promise.allSettled(
-            ids.map(id => fetch("{API}/actas/file?id=" + id).then(r => r.json()))
-        );
-        return results.map((r, i) => ({{
-            id: ids[i],
-            ok: r.status === 'fulfilled',
-            url: r.status === 'fulfilled' ? (r.value?.data || '') : ''
-        }}));
-    }}""")
+    """Fetch URLs firmadas 1 por 1 (evita timeout con batches grandes)."""
+    results = []
+    for aid in archivo_ids:
+        try:
+            data = await page.evaluate(f"""async () => {{
+                const r = await fetch("{API}/actas/file?id={aid}");
+                return r.ok ? await r.json() : null;
+            }}""")
+            if data:
+                results.append({"id": aid, "ok": True, "url": data.get("data", "")})
+            else:
+                results.append({"id": aid, "ok": False, "url": ""})
+        except Exception:
+            results.append({"id": aid, "ok": False, "url": ""})
     return results
 
 
 async def batch_download_pdfs(page: Page, downloads: list[dict]) -> list[dict]:
-    """Descarga N PDFs desde S3 en paralelo dentro del browser."""
-    urls_json = json.dumps([d["url"] for d in downloads])
-    results = await page.evaluate(f"""async () => {{
-        const urls = {urls_json};
-        const results = await Promise.allSettled(
-            urls.map(async url => {{
-                if (!url) return null;
-                const r = await fetch(url);
+    """Descarga PDFs 1 por 1 (evita OOM en memoria JS)."""
+    for d in downloads:
+        d["downloaded"] = False
+        d["size"] = 0
+        if not d["url"]:
+            continue
+
+        try:
+            # Descarga en browser context y retorna como base64
+            b64 = await page.evaluate(f"""async () => {{
+                const r = await fetch("{d['url']}");
                 if (!r.ok) return null;
                 const buf = await r.arrayBuffer();
-                return Array.from(new Uint8Array(buf));
-            }})
-        );
-        return results.map(r => ({{
-            ok: r.status === 'fulfilled' && r.value !== null,
-            data: r.status === 'fulfilled' ? r.value : null
-        }}));
-    }}""")
+                const bytes = new Uint8Array(buf);
+                let bin = '';
+                for (let i=0; i<bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+                return btoa(bin);
+            }}""")
 
-    for i, r in enumerate(results):
-        downloads[i]["downloaded"] = r["ok"]
-        if r["ok"] and r["data"]:
-            destino = Path(downloads[i]["destino"])
-            destino.parent.mkdir(parents=True, exist_ok=True)
-            destino.write_bytes(bytes(r["data"]))
-            downloads[i]["size"] = len(r["data"])
+            if b64:
+                import base64
+                data = base64.b64decode(b64)
+                destino = Path(d["destino"])
+                destino.parent.mkdir(parents=True, exist_ok=True)
+                destino.write_bytes(data)
+                d["downloaded"] = True
+                d["size"] = len(data)
+        except Exception as e:
+            logger.debug("  PDF download failed %s: %s", d["nombre_destino"], e)
+
     return downloads
 
 
@@ -464,12 +469,14 @@ async def main(
     workers: int = MAX_WORKERS,
     fase: int = 0,
     filtro_distritos: list[str] | None = None,
+    filtro_ubigeos: list[str] | None = None,
 ) -> None:
     """
     fase=0: ambas fases
     fase=1: solo datos (rápido)
     fase=2: solo PDFs (pesado)
     filtro_distritos: lista de nombres para procesar solo esos
+    filtro_ubigeos: lista de ubigeos para procesar solo esos (más confiable)
     """
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     init_forensic_db()
@@ -484,7 +491,10 @@ async def main(
         distritos = sort_distritos(await obtener_distritos(main_page))
         logger.info("Distritos: %d (prioritarios primero)", len(distritos))
 
-        if filtro_distritos:
+        if filtro_ubigeos:
+            distritos = [d for d in distritos if d["ubigeo"] in filtro_ubigeos]
+            logger.info("FILTRO UBIGEOS: %s", [d["nombre"] for d in distritos])
+        elif filtro_distritos:
             filtro_upper = [f.upper() for f in filtro_distritos]
             distritos = [d for d in distritos if d["nombre"] in filtro_upper]
             logger.info("FILTRO: %s", [d["nombre"] for d in distritos])
