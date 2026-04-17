@@ -212,6 +212,142 @@ def init_forensic_db() -> sqlite3.Connection:
         CREATE INDEX IF NOT EXISTS idx_discrepancias_acta ON discrepancias(acta_id);
         CREATE INDEX IF NOT EXISTS idx_discrepancias_tipo ON discrepancias(tipo);
         CREATE INDEX IF NOT EXISTS idx_custodia_ts ON cadena_custodia(timestamp);
+
+        -- ==============================================
+        -- CAPA DE AUDITORÍA (Supabase-compatible)
+        -- ==============================================
+
+        -- Partidos (catálogo)
+        CREATE TABLE IF NOT EXISTS partidos (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nombre TEXT NOT NULL UNIQUE,
+            codigo TEXT,
+            candidato TEXT,
+            candidato_documento TEXT
+        );
+
+        -- Locales de votación
+        CREATE TABLE IF NOT EXISTS locales_votacion (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            codigo INTEGER UNIQUE,
+            nombre TEXT NOT NULL,
+            ubigeo TEXT NOT NULL,
+            distrito TEXT NOT NULL,
+            direccion TEXT,
+            total_mesas INTEGER DEFAULT 0
+        );
+
+        -- Auditoría por mesa (vista materializada con flags)
+        CREATE TABLE IF NOT EXISTS auditoria_mesa (
+            acta_id INTEGER PRIMARY KEY,
+            mesa TEXT NOT NULL,
+            distrito TEXT NOT NULL,
+            ubigeo TEXT NOT NULL,
+            local_votacion TEXT,
+            codigo_local INTEGER,
+
+            -- Estado
+            estado_acta TEXT,
+            codigo_estado_acta TEXT,
+            motivo_jee TEXT,
+
+            -- Totales
+            electores_habiles INTEGER,
+            asistieron INTEGER,
+            ausentismo_pct REAL,
+            votos_emitidos INTEGER,
+            votos_validos INTEGER,
+
+            -- Hora instalación (Gemini)
+            hora_instalacion TEXT,
+            tramo_hora TEXT,
+
+            -- Votos principales
+            votos_rafael INTEGER DEFAULT 0,
+            votos_keiko INTEGER DEFAULT 0,
+            votos_nieto INTEGER DEFAULT 0,
+            votos_belmont INTEGER DEFAULT 0,
+            votos_blanco INTEGER DEFAULT 0,
+            votos_nulos INTEGER DEFAULT 0,
+            votos_impugnados INTEGER DEFAULT 0,
+
+            -- Porcentajes
+            pct_rafael REAL,
+            pct_keiko REAL,
+            pct_participacion REAL,
+
+            -- PDFs
+            tiene_pdf_escrutinio INTEGER DEFAULT 0,
+            tiene_pdf_instalacion INTEGER DEFAULT 0,
+            tiene_pdf_sufragio INTEGER DEFAULT 0,
+
+            -- Flags de anomalía
+            flag_hora_anomala INTEGER DEFAULT 0,
+            flag_ausentismo_alto INTEGER DEFAULT 0,
+            flag_sin_pdf INTEGER DEFAULT 0,
+            flag_jee INTEGER DEFAULT 0,
+            flag_observacion INTEGER DEFAULT 0,
+            flag_votos_nulos_alto INTEGER DEFAULT 0,
+            flag_error_aritmetico INTEGER DEFAULT 0,
+            flag_cambio_temporal INTEGER DEFAULT 0,
+            total_flags INTEGER DEFAULT 0,
+
+            -- Integridad
+            api_response_hash TEXT,
+            tiene_raw_json INTEGER DEFAULT 0,
+            capturado_at TEXT,
+            auditado_at TEXT,
+
+            FOREIGN KEY (acta_id) REFERENCES actas(acta_id)
+        );
+
+        -- Resumen auditoría por distrito
+        CREATE TABLE IF NOT EXISTS auditoria_distrito (
+            ubigeo TEXT PRIMARY KEY,
+            distrito TEXT NOT NULL,
+            total_mesas INTEGER DEFAULT 0,
+            mesas_contabilizadas INTEGER DEFAULT 0,
+            mesas_observadas INTEGER DEFAULT 0,
+            mesas_anuladas INTEGER DEFAULT 0,
+            mesas_sin_pdf INTEGER DEFAULT 0,
+            mesas_con_flags INTEGER DEFAULT 0,
+
+            total_electores INTEGER DEFAULT 0,
+            total_asistieron INTEGER DEFAULT 0,
+            ausentismo_pct REAL,
+
+            votos_rafael INTEGER DEFAULT 0,
+            votos_keiko INTEGER DEFAULT 0,
+            pct_rafael REAL,
+            pct_keiko REAL,
+
+            total_flags INTEGER DEFAULT 0,
+            flags_hora_anomala INTEGER DEFAULT 0,
+            flags_ausentismo INTEGER DEFAULT 0,
+            flags_sin_pdf INTEGER DEFAULT 0,
+            flags_jee INTEGER DEFAULT 0,
+            flags_nulos_alto INTEGER DEFAULT 0,
+            flags_error_aritmetico INTEGER DEFAULT 0,
+
+            snapshots_count INTEGER DEFAULT 0,
+            cambios_detectados INTEGER DEFAULT 0,
+
+            actualizado_at TEXT
+        );
+
+        -- Fechas ONPE (tracking temporal)
+        CREATE TABLE IF NOT EXISTS fecha_onpe (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            fecha_proceso TEXT,
+            capturado_at TEXT NOT NULL,
+            fuente TEXT DEFAULT 'api'
+        );
+
+        -- Indices auditoría
+        CREATE INDEX IF NOT EXISTS idx_auditoria_distrito ON auditoria_mesa(distrito);
+        CREATE INDEX IF NOT EXISTS idx_auditoria_flags ON auditoria_mesa(total_flags);
+        CREATE INDEX IF NOT EXISTS idx_auditoria_estado ON auditoria_mesa(estado_acta);
+        CREATE INDEX IF NOT EXISTS idx_locales_ubigeo ON locales_votacion(ubigeo);
     """)
     conn.commit()
     return conn
@@ -233,6 +369,220 @@ def log_custodia(
          json.dumps(detalle or {}, ensure_ascii=False)),
     )
     conn.commit()
+
+
+def poblar_auditoria() -> dict:
+    """Puebla auditoria_mesa y auditoria_distrito desde datos existentes."""
+    conn = get_conn()
+    now = _now()
+
+    # 1. Poblar catálogo de partidos
+    partidos = conn.execute(
+        "SELECT DISTINCT partido_nombre, partido_codigo, candidato_nombre, candidato_documento "
+        "FROM votos_por_mesa WHERE fuente='api'"
+    ).fetchall()
+    for p in partidos:
+        conn.execute(
+            "INSERT OR IGNORE INTO partidos (nombre, codigo, candidato, candidato_documento) VALUES (?,?,?,?)",
+            (p["partido_nombre"], p["partido_codigo"], p["candidato_nombre"], p["candidato_documento"]),
+        )
+
+    # 2. Poblar auditoria_mesa
+    actas = conn.execute("""
+        SELECT acta_id, mesa, distrito, ubigeo, local_votacion, codigo_local_votacion,
+               estado_acta, codigo_estado_acta, estado_acta_resolucion,
+               total_electores, total_votantes, votos_emitidos, votos_validos,
+               participacion_pct, votos_blanco, votos_nulos, votos_impugnados,
+               tiene_pdf_escrutinio, tiene_pdf_instalacion, tiene_pdf_sufragio,
+               api_response_hash, api_response_raw, capturado_at
+        FROM actas WHERE tiene_datos=1
+    """).fetchall()
+
+    count = 0
+    for a in actas:
+        acta_id = a["acta_id"]
+
+        # Votos principales
+        votos = {}
+        for v in conn.execute(
+            "SELECT partido_nombre, votos FROM votos_por_mesa WHERE acta_id=? AND fuente='api'",
+            (acta_id,)
+        ).fetchall():
+            votos[v["partido_nombre"]] = v["votos"] or 0
+
+        rafael = votos.get("RENOVACIÓN POPULAR", votos.get("RENOVACION POPULAR", 0))
+        keiko = votos.get("FUERZA POPULAR", 0)
+        nieto = votos.get("PARTIDO DEL BUEN GOBIERNO", 0)
+        belmont = 0
+        for k, v in votos.items():
+            if "BELMONT" in k.upper():
+                belmont = v
+                break
+
+        total_validos = a["votos_validos"] or 0
+        pct_rafael = (rafael / total_validos * 100) if total_validos > 0 else 0
+        pct_keiko = (keiko / total_validos * 100) if total_validos > 0 else 0
+
+        electores = a["total_electores"] or 0
+        asistieron = a["total_votantes"] or 0
+        ausentismo = ((electores - asistieron) / electores * 100) if electores > 0 else 0
+
+        # Hora instalación (Gemini)
+        hora = None
+        tramo = None
+        gemini = conn.execute(
+            "SELECT gemini_hora_inicio FROM pdfs WHERE acta_id=? AND tipo=3 AND gemini_extraido=1",
+            (acta_id,)
+        ).fetchone()
+        if gemini and gemini["gemini_hora_inicio"]:
+            hora = gemini["gemini_hora_inicio"]
+            try:
+                h = int(hora.split(":")[0])
+                if h < 7:
+                    tramo = "MADRUGADA"
+                elif h < 8:
+                    tramo = "TEMPRANO"
+                elif h < 9:
+                    tramo = "NORMAL"
+                else:
+                    tramo = "TARDIO"
+            except (ValueError, IndexError):
+                tramo = "INVALIDO"
+
+        # Flags
+        flag_hora = 1 if tramo in ("MADRUGADA", "TARDIO", "INVALIDO") else 0
+        flag_ausentismo = 1 if ausentismo > 40 else 0
+        flag_sin_pdf = 1 if not (a["tiene_pdf_escrutinio"] or a["tiene_pdf_instalacion"]) else 0
+        flag_jee = 1 if a["codigo_estado_acta"] in ("3", "4", "5") else 0  # observada/anulada/etc
+        flag_obs = 1 if a["estado_acta_resolucion"] else 0
+        v_nulos = a["votos_nulos"] or 0
+        v_emitidos = a["votos_emitidos"] or 1
+        flag_nulos = 1 if (v_nulos / v_emitidos * 100) > 10 else 0
+
+        # Error aritmético: emitidos != validos + blanco + nulos + impugnados
+        v_blanco = a["votos_blanco"] or 0
+        v_imp = a["votos_impugnados"] or 0
+        suma = total_validos + v_blanco + v_nulos + v_imp
+        flag_error = 1 if (a["votos_emitidos"] or 0) > 0 and suma != (a["votos_emitidos"] or 0) else 0
+
+        # Cambio temporal
+        cambio = conn.execute(
+            "SELECT COUNT(*) FROM snapshots WHERE acta_id=? AND cambio_detectado=1",
+            (acta_id,)
+        ).fetchone()[0]
+        flag_cambio = 1 if cambio > 0 else 0
+
+        total_flags = flag_hora + flag_ausentismo + flag_sin_pdf + flag_jee + flag_obs + flag_nulos + flag_error + flag_cambio
+
+        conn.execute("""
+            INSERT OR REPLACE INTO auditoria_mesa
+            (acta_id, mesa, distrito, ubigeo, local_votacion, codigo_local,
+             estado_acta, codigo_estado_acta, motivo_jee,
+             electores_habiles, asistieron, ausentismo_pct, votos_emitidos, votos_validos,
+             hora_instalacion, tramo_hora,
+             votos_rafael, votos_keiko, votos_nieto, votos_belmont,
+             votos_blanco, votos_nulos, votos_impugnados,
+             pct_rafael, pct_keiko, pct_participacion,
+             tiene_pdf_escrutinio, tiene_pdf_instalacion, tiene_pdf_sufragio,
+             flag_hora_anomala, flag_ausentismo_alto, flag_sin_pdf, flag_jee,
+             flag_observacion, flag_votos_nulos_alto, flag_error_aritmetico, flag_cambio_temporal,
+             total_flags, api_response_hash, tiene_raw_json, capturado_at, auditado_at)
+            VALUES (?,?,?,?,?,?, ?,?,?, ?,?,?,?,?, ?,?, ?,?,?,?, ?,?,?, ?,?,?, ?,?,?, ?,?,?,?, ?,?,?,?, ?,?,?,?,?)
+        """, (
+            acta_id, a["mesa"], a["distrito"], a["ubigeo"],
+            a["local_votacion"], a["codigo_local_votacion"],
+            a["estado_acta"], a["codigo_estado_acta"], a["estado_acta_resolucion"],
+            electores, asistieron, round(ausentismo, 2),
+            a["votos_emitidos"], total_validos,
+            hora, tramo,
+            rafael, keiko, nieto, belmont,
+            v_blanco, v_nulos, v_imp,
+            round(pct_rafael, 2), round(pct_keiko, 2),
+            round(a["participacion_pct"] or 0, 2),
+            a["tiene_pdf_escrutinio"], a["tiene_pdf_instalacion"], a["tiene_pdf_sufragio"],
+            flag_hora, flag_ausentismo, flag_sin_pdf, flag_jee,
+            flag_obs, flag_nulos, flag_error, flag_cambio,
+            total_flags, a["api_response_hash"],
+            1 if a["api_response_raw"] else 0,
+            a["capturado_at"], now,
+        ))
+        count += 1
+
+    conn.commit()
+
+    # 3. Poblar auditoria_distrito
+    distritos = conn.execute("SELECT DISTINCT ubigeo, distrito FROM auditoria_mesa").fetchall()
+    for d in distritos:
+        ub, nombre = d["ubigeo"], d["distrito"]
+        r = conn.execute("""
+            SELECT
+                COUNT(*) as total,
+                SUM(CASE WHEN codigo_estado_acta='1' THEN 1 ELSE 0 END) as contabilizadas,
+                SUM(CASE WHEN codigo_estado_acta IN ('3','4','5') THEN 1 ELSE 0 END) as observadas,
+                SUM(CASE WHEN codigo_estado_acta='6' THEN 1 ELSE 0 END) as anuladas,
+                SUM(flag_sin_pdf) as sin_pdf,
+                SUM(CASE WHEN total_flags>0 THEN 1 ELSE 0 END) as con_flags,
+                SUM(electores_habiles) as electores,
+                SUM(asistieron) as asistieron,
+                SUM(votos_rafael) as rafael,
+                SUM(votos_keiko) as keiko,
+                SUM(total_flags) as flags_total,
+                SUM(flag_hora_anomala) as f_hora,
+                SUM(flag_ausentismo_alto) as f_ausen,
+                SUM(flag_sin_pdf) as f_pdf,
+                SUM(flag_jee) as f_jee,
+                SUM(flag_votos_nulos_alto) as f_nulos,
+                SUM(flag_error_aritmetico) as f_error
+            FROM auditoria_mesa WHERE ubigeo=?
+        """, (ub,)).fetchone()
+
+        total_el = r["electores"] or 0
+        total_as = r["asistieron"] or 0
+        aus_pct = ((total_el - total_as) / total_el * 100) if total_el > 0 else 0
+        total_v = r["rafael"] + r["keiko"] if r["rafael"] and r["keiko"] else 0
+
+        snaps = conn.execute(
+            "SELECT COUNT(*) FROM snapshots s JOIN actas a ON s.acta_id=a.acta_id WHERE a.ubigeo=?", (ub,)
+        ).fetchone()[0]
+        cambios = conn.execute(
+            "SELECT COUNT(*) FROM snapshots s JOIN actas a ON s.acta_id=a.acta_id WHERE a.ubigeo=? AND s.cambio_detectado=1", (ub,)
+        ).fetchone()[0]
+
+        conn.execute("""
+            INSERT OR REPLACE INTO auditoria_distrito
+            (ubigeo, distrito, total_mesas, mesas_contabilizadas, mesas_observadas, mesas_anuladas,
+             mesas_sin_pdf, mesas_con_flags,
+             total_electores, total_asistieron, ausentismo_pct,
+             votos_rafael, votos_keiko, pct_rafael, pct_keiko,
+             total_flags, flags_hora_anomala, flags_ausentismo, flags_sin_pdf,
+             flags_jee, flags_nulos_alto, flags_error_aritmetico,
+             snapshots_count, cambios_detectados, actualizado_at)
+            VALUES (?,?,?,?,?,?, ?,?, ?,?,?, ?,?,?,?, ?,?,?,?, ?,?,?, ?,?,?)
+        """, (
+            ub, nombre, r["total"], r["contabilizadas"], r["observadas"], r["anuladas"],
+            r["sin_pdf"], r["con_flags"],
+            total_el, total_as, round(aus_pct, 2),
+            r["rafael"], r["keiko"],
+            round((r["rafael"] or 0) / max(total_v, 1) * 100, 2) if total_v else 0,
+            round((r["keiko"] or 0) / max(total_v, 1) * 100, 2) if total_v else 0,
+            r["flags_total"], r["f_hora"], r["f_ausen"], r["f_pdf"],
+            r["f_jee"], r["f_nulos"], r["f_error"],
+            snaps, cambios, now,
+        ))
+
+    conn.commit()
+
+    result = {
+        "auditoria_mesa": conn.execute("SELECT COUNT(*) FROM auditoria_mesa").fetchone()[0],
+        "auditoria_distrito": conn.execute("SELECT COUNT(*) FROM auditoria_distrito").fetchone()[0],
+        "partidos": conn.execute("SELECT COUNT(*) FROM partidos").fetchone()[0],
+        "mesas_con_flags": conn.execute("SELECT COUNT(*) FROM auditoria_mesa WHERE total_flags>0").fetchone()[0],
+    }
+
+    log_custodia(conn, "AUDITORIA_POBLADA", detalle=result)
+    conn.close()
+    logger.info("Auditoría poblada: %s", result)
+    return result
 
 
 def migrate_v1_to_v2() -> None:

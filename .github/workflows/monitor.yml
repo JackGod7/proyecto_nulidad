@@ -1,0 +1,84 @@
+name: Monitor Electoral ONPE
+
+on:
+  schedule:
+    # Cada 12 horas: 6am y 6pm UTC (1am y 1pm Lima)
+    - cron: '0 6,18 * * *'
+  workflow_dispatch:
+    inputs:
+      distritos:
+        description: 'Distritos a monitorear (separados por espacio, vacío = todos)'
+        required: false
+        default: ''
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install uv
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+
+      - name: Install dependencies
+        run: |
+          uv sync
+          uv run playwright install chromium
+
+      - name: Download forensic.db
+        run: |
+          # La DB viaja en el repo (o se descarga de artifact)
+          ls -la data/forensic.db || echo "WARNING: forensic.db not found"
+
+      - name: Run monitor
+        run: |
+          DISTRITOS="${{ github.event.inputs.distritos }}"
+          if [ -z "$DISTRITOS" ]; then
+            uv run python -m src.audit.temporal_monitor
+          else
+            uv run python -m src.audit.temporal_monitor $DISTRITOS
+          fi
+
+      - name: Check for changes
+        id: changes
+        run: |
+          CAMBIOS=$(find data/ -name "monitor_*.json" -newer data/forensic.db 2>/dev/null | wc -l)
+          echo "cambios=$CAMBIOS" >> $GITHUB_OUTPUT
+          if [ "$CAMBIOS" -gt 0 ]; then
+            echo "::warning::CAMBIOS DETECTADOS EN ONPE"
+            cat data/monitor_*.json | python -c "
+          import sys, json
+          data = json.load(sys.stdin)
+          for d in data:
+              cambios = d.get('cambios_detectados', 0)
+              if cambios > 0:
+                  print(f'ALERTA: {d[\"distrito\"]} - {cambios} cambios')
+                  for c in d.get('detalle_cambios', []):
+                      for diff in c.get('diffs', []):
+                          print(f'  Mesa {c[\"mesa\"]}: {diff[\"campo\"]} {diff[\"anterior\"]} -> {diff[\"actual\"]} [{diff[\"severidad\"]}]')
+          "
+          fi
+
+      - name: Commit results
+        if: always()
+        run: |
+          git config user.name "Monitor Electoral Bot"
+          git config user.email "monitor@proyecto-nulidad.ci"
+          git add data/forensic.db data/monitor_*.json 2>/dev/null || true
+          git diff --staged --quiet || git commit -m "monitor: snapshot $(date -u +%Y-%m-%d_%H:%M)"
+          git push || echo "Push failed - will retry next run"
+
+      - name: Upload artifacts
+        if: steps.changes.outputs.cambios != '0'
+        uses: actions/upload-artifact@v4
+        with:
+          name: cambios-onpe-${{ github.run_number }}
+          path: data/monitor_*.json
+          retention-days: 90
