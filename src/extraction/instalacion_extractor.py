@@ -1,20 +1,23 @@
-"""Extractor masivo de actas de INSTALACION via OpenAI gpt-4o-mini."""
+"""Extractor masivo de actas de INSTALACION via Gemini."""
 import json
 import logging
 import os
 import re
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
+from threading import Lock
 
 from dotenv import load_dotenv
-from openai import OpenAI
+from google import genai
+from google.genai import types
 
 from src.db.schema import get_conn, log_custodia
 
 load_dotenv()
 logger = logging.getLogger(__name__)
 
-MODEL = "gpt-4o-mini"
+MODEL = "gemini-2.5-flash-lite"
 DELAY_BETWEEN = 1.0
 MAX_RETRIES = 3
 
@@ -57,25 +60,19 @@ def _hora_a_minutos(hora_str: str | None) -> int | None:
     return h * 60 + mi
 
 
-def extraer_instalacion(pdf_path: Path, client: OpenAI) -> dict:
-    """Sube PDF a OpenAI Files API y extrae campos."""
+def extraer_instalacion(pdf_path: Path, client: genai.Client) -> dict:
+    """Lee PDF y extrae campos via Gemini."""
     for intento in range(MAX_RETRIES):
         try:
-            with open(pdf_path, "rb") as f:
-                ofile = client.files.create(file=f, purpose="assistants")
-            resp = client.responses.create(
+            pdf_bytes = pdf_path.read_bytes()
+            resp = client.models.generate_content(
                 model=MODEL,
-                input=[{"role": "user", "content": [
-                    {"type": "input_file", "file_id": ofile.id},
-                    {"type": "input_text", "text": PROMPT},
-                ]}],
+                contents=[
+                    types.Part.from_bytes(data=pdf_bytes, mime_type="application/pdf"),
+                    PROMPT,
+                ],
             )
-            # Limpiar archivo remoto
-            try:
-                client.files.delete(ofile.id)
-            except Exception:
-                pass
-            return _parse(resp.output_text)
+            return _parse(resp.text)
         except Exception as e:
             if intento < MAX_RETRIES - 1:
                 wait = 3 * (intento + 1)
@@ -108,13 +105,76 @@ def _ensure_tabla_instalacion(conn) -> None:
     conn.commit()
 
 
+def _procesar_row(row: dict, client: genai.Client, db_lock: Lock, counter: list, total: int) -> None:
+    from src.config import PDFS_DIR
+    raw_path = Path(row["nombre_destino"])
+    pdf_path = raw_path if raw_path.is_absolute() else PDFS_DIR / row["distrito"].upper() / raw_path.name
+
+    if not pdf_path.exists():
+        logger.warning("No existe: %s", pdf_path)
+        return
+
+    conn = get_conn()
+    try:
+        data = extraer_instalacion(pdf_path, client)
+        hora_raw = data.get("hora_instalacion")
+        hora_min = _hora_a_minutos(hora_raw)
+        obs = data.get("observaciones")
+        if obs and obs.lower() in ("no hay observaciones.", "no hay observaciones", "ninguna", "none", "null"):
+            obs = None
+
+        with db_lock:
+            conn.execute(
+                """INSERT OR REPLACE INTO instalaciones
+                   (mesa, acta_id, archivo_id, distrito,
+                    local_votacion, hora_instalacion_raw, hora_instalacion_min,
+                    total_electores_habiles, material_buen_estado,
+                    observaciones, gemini_raw, extraido_at)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,datetime('now'))""",
+                (
+                    data.get("mesa") or row["mesa"],
+                    row["acta_id"],
+                    row["archivo_id"],
+                    data.get("distrito") or row["distrito"],
+                    data.get("local_votacion"),
+                    hora_raw, hora_min,
+                    data.get("total_electores_habiles"),
+                    1 if data.get("material_buen_estado") else 0,
+                    obs,
+                    json.dumps(data, ensure_ascii=False),
+                ),
+            )
+            conn.commit()
+            log_custodia(conn, "GEMINI_INSTALACION",
+                entidad_tipo="pdf", entidad_id=row["archivo_id"],
+                detalle={"mesa": row["mesa"], "hora": hora_raw, "hora_min": hora_min})
+            counter[0] += 1
+            i = counter[0]
+        logger.info("[%d/%d] %s %s hora=%s (%s min) electores=%s",
+            i, total, row["distrito"], row["mesa"],
+            hora_raw, hora_min, data.get("total_electores_habiles"))
+
+    except Exception as e:
+        logger.error("ERROR %s: %s", row["mesa"], str(e)[:200])
+        with db_lock:
+            conn.execute(
+                """INSERT OR REPLACE INTO instalaciones (mesa, acta_id, archivo_id, distrito, error)
+                   VALUES (?,?,?,?,?)""",
+                (row["mesa"], row["acta_id"], row["archivo_id"], row["distrito"], str(e)[:500]),
+            )
+            conn.commit()
+    finally:
+        conn.close()
+
+
 def procesar_instalaciones(
     distrito: str | None = None,
     limit: int | None = None,
     delay: float = DELAY_BETWEEN,
+    workers: int = 3,
 ) -> None:
-    """Procesa PDFs de instalacion pendientes."""
-    client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+    """Procesa PDFs de instalacion pendientes con paralelismo controlado."""
+    client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
     conn = get_conn()
     _ensure_tabla_instalacion(conn)
 
@@ -137,80 +197,26 @@ def procesar_instalaciones(
         query += f" LIMIT {limit}"
 
     rows = conn.execute(query, params).fetchall()
-    total = len(rows)
-    logger.info("Pendientes: %d", total)
-
-    ok = 0
-    errores = 0
-    for i, row in enumerate(rows, 1):
-        raw_path = Path(row["nombre_destino"])
-        if not raw_path.is_absolute():
-            from src.config import PDFS_DIR
-            pdf_path = PDFS_DIR / row["distrito"].upper() / raw_path.name
-        else:
-            pdf_path = raw_path
-
-        if not pdf_path.exists():
-            logger.warning("No existe: %s", pdf_path)
-            continue
-
-        try:
-            data = extraer_instalacion(pdf_path, client)
-            hora_raw = data.get("hora_instalacion")
-            hora_min = _hora_a_minutos(hora_raw)
-            obs = data.get("observaciones")
-            if obs and obs.lower() in ("no hay observaciones.", "no hay observaciones", "ninguna", "none", "null"):
-                obs = None
-
-            conn.execute(
-                """INSERT OR REPLACE INTO instalaciones
-                   (mesa, acta_id, archivo_id, distrito,
-                    local_votacion, hora_instalacion_raw, hora_instalacion_min,
-                    total_electores_habiles, material_buen_estado,
-                    observaciones, gemini_raw, extraido_at)
-                   VALUES (?,?,?,?,?,?,?,?,?,?,?,datetime('now'))""",
-                (
-                    data.get("mesa") or row["mesa"],
-                    row["acta_id"],
-                    row["archivo_id"],
-                    data.get("distrito") or row["distrito"],
-                    data.get("local_votacion"),
-                    hora_raw,
-                    hora_min,
-                    data.get("total_electores_habiles"),
-                    1 if data.get("material_buen_estado") else 0,
-                    obs,
-                    json.dumps(data, ensure_ascii=False),
-                ),
-            )
-            conn.commit()
-
-            log_custodia(
-                conn, "OPENAI_INSTALACION",
-                entidad_tipo="pdf", entidad_id=row["archivo_id"],
-                detalle={"mesa": row["mesa"], "hora": hora_raw, "hora_min": hora_min},
-            )
-
-            ok += 1
-            logger.info("[%d/%d] %s %s hora=%s (%s min) electores=%s",
-                i, total, row["distrito"], row["mesa"],
-                hora_raw, hora_min, data.get("total_electores_habiles"))
-
-        except Exception as e:
-            errores += 1
-            logger.error("[%d/%d] ERROR %s: %s", i, total, row["mesa"], str(e)[:200])
-            conn.execute(
-                """INSERT OR REPLACE INTO instalaciones (mesa, acta_id, archivo_id, distrito, error)
-                   VALUES (?,?,?,?,?)""",
-                (row["mesa"], row["acta_id"], row["archivo_id"], row["distrito"], str(e)[:500]),
-            )
-            conn.commit()
-
-        if i < total:
-            time.sleep(delay)
-
-    logger.info("Completado: %d ok, %d errores de %d", ok, errores, total)
     conn.close()
+    total = len(rows)
+    logger.info("Pendientes: %d (workers=%d)", total, workers)
+
+    db_lock = Lock()
+    counter = [0]
+
+    with ThreadPoolExecutor(max_workers=workers) as executor:
+        futures = []
+        for i, row in enumerate(rows):
+            futures.append(executor.submit(_procesar_row, dict(row), client, db_lock, counter, total))
+            if (i + 1) % workers == 0:
+                time.sleep(delay)
+        for f in as_completed(futures):
+            try:
+                f.result()
+            except Exception as e:
+                logger.error("Worker error: %s", e)
+
+    logger.info("Completado: %d/%d", counter[0], total)
 
 
 def resumen() -> None:

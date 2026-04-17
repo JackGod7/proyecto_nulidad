@@ -6,6 +6,8 @@ import logging
 import random
 from pathlib import Path
 
+import httpx
+
 import pandas as pd
 from playwright.async_api import async_playwright, BrowserContext, Page
 from playwright_stealth import Stealth
@@ -382,10 +384,13 @@ async def fase1_distrito(
 # ─── FASE 2: PDFs (descarga masiva desde S3) ───
 
 
+RESTART_PAGE_EVERY = 400  # reiniciar page cada N descargas para liberar memoria
+
+
 async def fase2_distrito(
-    page: Page, nombre: str, sem: asyncio.Semaphore,
+    ctx, nombre: str, sem: asyncio.Semaphore,
 ) -> int:
-    """Fase 2 v2: descarga PDFs + SHA-256 hash inmediato."""
+    """Fase 2 v2: descarga PDFs + SHA-256 hash inmediato. Reinicia page cada RESTART_PAGE_EVERY."""
     async with sem:
         conn = get_conn()
         pendientes = [dict(r) for r in conn.execute(
@@ -402,8 +407,20 @@ async def fase2_distrito(
         distrito_dir.mkdir(parents=True, exist_ok=True)
 
         descargados = 0
+        page = await ctx.new_page()
+        await page.goto(f"{BASE_URL}/", wait_until="networkidle", timeout=60000)
 
         for batch_start in range(0, len(pendientes), BATCH_SIZE):
+            # Reiniciar page periódicamente para liberar memoria del browser
+            if descargados > 0 and descargados % RESTART_PAGE_EVERY == 0:
+                logger.info("  F2v2 %s: reiniciando page (mem cleanup) en %d/%d", nombre, descargados, len(pendientes))
+                try:
+                    await page.close()
+                except Exception:
+                    pass
+                page = await ctx.new_page()
+                await page.goto(f"{BASE_URL}/", wait_until="networkidle", timeout=60000)
+
             batch = pendientes[batch_start:batch_start + BATCH_SIZE]
             arch_ids = [p["archivo_id"] for p in batch]
 
@@ -424,39 +441,39 @@ async def fase2_distrito(
                         })
 
                 if downloads:
-                    results = await batch_download_pdfs(page, downloads)
-                    conn = get_conn()
-                    for d in results:
-                        # SHA-256 hash inmediato
-                        sha = ""
-                        size = d.get("size", 0)
-                        if d.get("downloaded"):
-                            from src.audit.integrity import sha256_file
-                            fpath = Path(d["destino"])
-                            if fpath.exists():
-                                sha = sha256_file(fpath)
-                                size = fpath.stat().st_size
-
-                        conn.execute("""
-                            UPDATE pdfs SET
-                                descargado=?, tamano_bytes=?, sha256_hash=?,
-                                hash_calculado_at=datetime('now'), archivo_en_disco=?,
-                                descarga_at=datetime('now')
-                            WHERE archivo_id=?
-                        """, (
-                            1 if d.get("downloaded") else 0, size, sha or None,
-                            1 if d.get("downloaded") else 0, d["archivo_id"],
-                        ))
-                        if d.get("downloaded"):
-                            descargados += 1
-                    conn.commit()
-                    conn.close()
+                    from src.audit.integrity import sha256_file
+                    async with httpx.AsyncClient(timeout=60) as hclient:
+                        for d in downloads:
+                            try:
+                                resp = await hclient.get(d["url"])
+                                if resp.status_code == 200 and resp.headers.get("content-type", "").startswith("application/pdf"):
+                                    fpath = Path(d["destino"])
+                                    fpath.parent.mkdir(parents=True, exist_ok=True)
+                                    fpath.write_bytes(resp.content)
+                                    sha = sha256_file(fpath)
+                                    size = len(resp.content)
+                                    conn = get_conn()
+                                    conn.execute("""
+                                        UPDATE pdfs SET descargado=1, tamano_bytes=?, sha256_hash=?,
+                                            hash_calculado_at=datetime('now'), archivo_en_disco=1,
+                                            descarga_at=datetime('now')
+                                        WHERE archivo_id=?
+                                    """, (size, sha, d["archivo_id"]))
+                                    conn.commit()
+                                    conn.close()
+                                    descargados += 1
+                            except Exception as de:
+                                logger.warning("  httpx error %s: %s", d["archivo_id"], de)
 
             except Exception as e:
                 logger.error("  F2v2 batch error %s: %s", nombre, e)
 
             await rdelay(0.3)
 
+        try:
+            await page.close()
+        except Exception:
+            pass
         logger.info("<<< F2 %s: %d/%d descargados", nombre, descargados, len(pendientes))
         return descargados
 
@@ -554,9 +571,8 @@ async def main(
             logger.info("═══ FASE 2: DESCARGA DE PDFs ═══")
             nombres = [d["nombre"] for d in distritos]
             tasks2 = []
-            for i, nombre in enumerate(nombres):
-                page = pages[i % len(pages)]
-                tasks2.append(fase2_distrito(page, nombre, sem))
+            for nombre in nombres:
+                tasks2.append(fase2_distrito(ctx, nombre, sem))
 
             results2 = await asyncio.gather(*tasks2, return_exceptions=True)
             total_pdfs = sum(r for r in results2 if isinstance(r, int))
