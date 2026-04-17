@@ -202,12 +202,36 @@ def generar_informe_distrito(distrito_key: str, distrito_nombre: str, archivo_cs
         f"durante las Elecciones Generales 2026.",
         s["body"]
     ))
+    pval = datos['pval_ttest']
+    try:
+        pval_f = float(pval)
+    except (ValueError, TypeError):
+        pval_f = 1.0
+    if pval_f < 0.001:
+        sig_texto = f"con alta significancia estadistica (p = {pval})"
+    elif pval_f < 0.05:
+        sig_texto = f"con significancia estadistica (p = {pval})"
+    else:
+        sig_texto = f"sin significancia estadistica suficiente (p = {pval})"
+
+    votos_rla_num = int(str(datos['votos_rla']).replace(',', '') or 0)
+    if votos_rla_num > 0:
+        impacto_texto = (
+            f"Se estima que <b>{datos['afectados']} electores</b> fueron afectados por el "
+            f"retraso y que <b>Renovacion Popular perdio aproximadamente "
+            f"{datos['votos_rla']} votos</b> como consecuencia."
+        )
+    else:
+        impacto_texto = (
+            f"Se identificaron <b>{datos['afectados']} electores</b> en mesas con retraso, "
+            f"aunque el efecto cuantificable sobre los votos de Renovacion Popular "
+            f"no resulta estadisticamente distinguible en este distrito."
+        )
+
     story.append(Paragraph(
-        f"El analisis estadistico demuestra con significancia extrema (p &lt; 10^-9) que "
-        f"las mesas instaladas despues de las 9:00 a.m. registran mayor ausentismo. "
-        f"Se estima que <b>{datos['afectados']} electores</b> fueron privados de ejercer su "
-        f"derecho al voto y que <b>Renovacion Popular perdio aproximadamente "
-        f"{datos['votos_rla']} votos</b> como consecuencia directa de este retraso.",
+        f"El analisis estadistico evalua {sig_texto} la relacion entre el retraso en la "
+        f"instalacion de mesas (despues de las 9:00 a.m.) y el aumento del ausentismo. "
+        f"{impacto_texto}",
         s["body"]
     ))
 
@@ -381,27 +405,48 @@ def _seccion_distrito(story, s, d):
         s["body"]
     ))
 
-    story.append(Paragraph("Significancia estadística", s["h2"]))
+    story.append(Paragraph("Significancia estadistica", s["h2"]))
+    try:
+        pv = float(d['pval_ttest'])
+    except (ValueError, TypeError):
+        pv = 1.0
+    if pv < 0.001:
+        sig_label = "Altamente significativo"
+        sig_desc = "La probabilidad de que esta diferencia sea producto del azar es virtualmente nula."
+    elif pv < 0.05:
+        sig_label = "Significativo"
+        sig_desc = "La diferencia es estadisticamente significativa al 95% de confianza."
+    else:
+        sig_label = "No significativo"
+        sig_desc = "No se puede descartar que la diferencia observada sea producto del azar."
     story.append(Paragraph(
-        f"Test t de Welch: p-value = <b>{d['pval_ttest']}</b>  - Extremadamente significativo. "
-        f"La probabilidad de que esta diferencia sea producto del azar es virtualmente nula.",
+        f"Test t de Welch: p-value = <b>{d['pval_ttest']}</b>  -  {sig_label}. {sig_desc}",
         s["body"]
     ))
 
-    story.append(Paragraph("Modelo de regresión", s["h2"]))
+    story.append(Paragraph("Modelo de regresion", s["h2"]))
+    coef = d['coef']
+    if coef >= 0:
+        formula = f"ausentismo = {d['const']:.2f} + <b>{coef:.2f}</b> x hora_decimal"
+    else:
+        formula = f"ausentismo = {d['const']:.2f} - <b>{abs(coef):.2f}</b> x hora_decimal"
+    story.append(Paragraph(formula, s["body_bold"]))
     story.append(Paragraph(
-        f"ausentismo = {d['const']:.2f} + <b>{d['coef']:.2f}</b> x hora_decimal",
-        s["body_bold"]
-    ))
-    story.append(Paragraph(
-        f"R2 = {d['r2']:.4f}  - p-value = <b>{d['pval_ols']}</b>",
+        f"R2 = {d['r2']:.4f}  -  p-value = <b>{d['pval_ols']}</b>",
         s["body"]
     ))
-    story.append(Paragraph(
-        f"Por cada hora adicional de retraso en la instalación, el ausentismo aumenta "
-        f"en <b>{d['coef']:.2f} puntos porcentuales</b>.",
-        s["body"]
-    ))
+    if coef > 0:
+        ols_texto = (
+            f"Por cada hora adicional de retraso, el ausentismo aumenta "
+            f"en <b>{coef:.2f} puntos porcentuales</b>."
+        )
+    else:
+        ols_texto = (
+            f"El coeficiente es negativo ({coef:.2f}), lo que indica que en este distrito "
+            f"no se observa una relacion lineal entre retraso y ausentismo. "
+            f"El efecto del retraso no es estadisticamente distinguible."
+        )
+    story.append(Paragraph(ols_texto, s["body"]))
 
     story.append(Paragraph("Votos totales", s["h2"]))
     votos_data = [
