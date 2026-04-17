@@ -587,25 +587,31 @@ def _cargar_distrito(archivo: str) -> dict:
     }
 
 
+INFORMES_DIR = Path("data/INFORMES_PDF")
+
 DISTRITOS = [
     ("miraflores", "Miraflores",
-     "data/ENTREGA_ESTADISTICO/MIRAFLORES/MIRAFLORES_horas_y_votos.csv",
-     "data/ENTREGA_ESTADISTICO/MIRAFLORES/INFORME_MIRAFLORES.pdf"),
+     "data/ENTREGA_ESTADISTICO/MIRAFLORES/MIRAFLORES_horas_y_votos.csv"),
     ("sjm", "San Juan de Miraflores",
-     "data/ENTREGA_ESTADISTICO/SAN_JUAN_DE_MIRAFLORES/SAN_JUAN_DE_MIRAFLORES_horas_y_votos.csv",
-     "data/ENTREGA_ESTADISTICO/SAN_JUAN_DE_MIRAFLORES/INFORME_SAN_JUAN_DE_MIRAFLORES.pdf"),
+     "data/ENTREGA_ESTADISTICO/SAN_JUAN_DE_MIRAFLORES/SAN_JUAN_DE_MIRAFLORES_horas_y_votos.csv"),
     ("pucusana", "Pucusana",
-     "data/ENTREGA_ESTADISTICO/PUCUSANA/PUCUSANA_horas_y_votos.csv",
-     "data/ENTREGA_ESTADISTICO/PUCUSANA/INFORME_PUCUSANA.pdf"),
+     "data/ENTREGA_ESTADISTICO/PUCUSANA/PUCUSANA_horas_y_votos.csv"),
     ("san_isidro", "San Isidro",
-     "data/ENTREGA_ESTADISTICO/SAN_ISIDRO/SAN_ISIDRO_horas_y_votos.csv",
-     "data/ENTREGA_ESTADISTICO/SAN_ISIDRO/INFORME_SAN_ISIDRO.pdf"),
+     "data/ENTREGA_ESTADISTICO/SAN_ISIDRO/SAN_ISIDRO_horas_y_votos.csv"),
     ("surco", "Santiago de Surco",
-     "data/ENTREGA_ESTADISTICO/SANTIAGO_DE_SURCO/SANTIAGO_DE_SURCO_horas_y_votos.csv",
-     "data/ENTREGA_ESTADISTICO/SANTIAGO_DE_SURCO/INFORME_SANTIAGO_DE_SURCO.pdf"),
+     "data/ENTREGA_ESTADISTICO/SANTIAGO_DE_SURCO/SANTIAGO_DE_SURCO_horas_y_votos.csv"),
 ]
 
 
+def _pdf_path(distrito_key: str) -> str:
+    """Genera ruta PDF versionada en INFORMES_PDF/."""
+    INFORMES_DIR.mkdir(parents=True, exist_ok=True)
+    fecha = datetime.now().strftime("%Y%m%d")
+    safe = distrito_key.upper()
+    return str(INFORMES_DIR / f"INFORME_{safe}_v{fecha}.pdf")
+
+
 if __name__ == "__main__":
-    for key, nombre, csv_path, pdf_path in DISTRITOS:
-        generar_informe_distrito(key, nombre, csv_path, pdf_path)
+    for key, nombre, csv_path in DISTRITOS:
+        pdf = _pdf_path(key)
+        generar_informe_distrito(key, nombre, csv_path, pdf)
