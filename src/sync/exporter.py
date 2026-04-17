@@ -12,35 +12,39 @@ DB_FILE = ROOT / "data" / "forensic.db"
 
 
 def export_distrito(conn: sqlite3.Connection, distrito: str, machine_id: str) -> Path:
-    """Exporta todas las actas y datos de un distrito a JSON."""
+    """Exporta todas las actas y datos de un distrito a JSON (schema v2)."""
     EXPORT_DIR.mkdir(parents=True, exist_ok=True)
 
     cur = conn.cursor()
 
-    # Actas
     cur.execute("SELECT * FROM actas WHERE distrito=?", (distrito,))
     cols = [d[0] for d in cur.description]
     actas = [dict(zip(cols, row)) for row in cur.fetchall()]
+    acta_ids = [a["acta_id"] for a in actas]
 
-    # Votos
-    acta_ids = [a["id"] for a in actas]
     votos: list[dict] = []
+    pdfs: list[dict] = []
+    instalaciones: list[dict] = []
     if acta_ids:
         placeholders = ",".join("?" * len(acta_ids))
-        cur.execute(f"SELECT * FROM votos_por_mesa WHERE acta_id IN ({placeholders})", acta_ids)
-        cols_v = [d[0] for d in cur.description]
-        votos = [dict(zip(cols_v, row)) for row in cur.fetchall()]
 
-    # PDFs metadata (sin blob)
-    pdfs: list[dict] = []
-    if acta_ids:
-        cur.execute(
-            f"SELECT id, acta_id, tipo_acta, sha256, estado_disco, "
-            f"hora_instalacion, mesa_numero, total_electores, gemini_raw "
-            f"FROM pdfs WHERE acta_id IN ({placeholders})", acta_ids
-        )
-        cols_p = [d[0] for d in cur.description]
-        pdfs = [dict(zip(cols_p, row)) for row in cur.fetchall()]
+        try:
+            cur.execute(f"SELECT * FROM votos_por_mesa WHERE acta_id IN ({placeholders})", acta_ids)
+            cv = [d[0] for d in cur.description]
+            votos = [dict(zip(cv, row)) for row in cur.fetchall()]
+        except sqlite3.OperationalError:
+            pass
+
+        cur.execute(f"SELECT * FROM pdfs WHERE acta_id IN ({placeholders})", acta_ids)
+        cp = [d[0] for d in cur.description]
+        pdfs = [dict(zip(cp, row)) for row in cur.fetchall()]
+
+    try:
+        cur.execute("SELECT * FROM instalaciones WHERE distrito=?", (distrito,))
+        ci = [d[0] for d in cur.description]
+        instalaciones = [dict(zip(ci, row)) for row in cur.fetchall()]
+    except sqlite3.OperationalError:
+        pass
 
     payload = {
         "machine_id": machine_id,
@@ -49,6 +53,7 @@ def export_distrito(conn: sqlite3.Connection, distrito: str, machine_id: str) ->
         "actas": actas,
         "votos": votos,
         "pdfs": pdfs,
+        "instalaciones": instalaciones,
     }
 
     safe_name = distrito.replace(" ", "_").upper()
@@ -56,7 +61,8 @@ def export_distrito(conn: sqlite3.Connection, distrito: str, machine_id: str) ->
     with open(out_file, "w", encoding="utf-8") as f:
         json.dump(payload, f, ensure_ascii=False, default=str)
 
-    logger.info("Exported %s → %s (%d actas)", distrito, out_file.name, len(actas))
+    logger.info("Exported %s -> %s (%d actas, %d pdfs, %d inst)",
+                distrito, out_file.name, len(actas), len(pdfs), len(instalaciones))
     return out_file
 
 
@@ -88,8 +94,8 @@ def main() -> None:
             logger.error("Error exporting %s: %s", distrito, e)
     conn.close()
 
-    print(f"\n✓ Exportados {len(exported)} distritos → sync/export/")
-    print("Copia esos archivos JSON al directorio sync/import/ de la máquina principal.")
+    print(f"\nOK Exportados {len(exported)} distritos -> sync/export/")
+    print("Copia esos archivos JSON al directorio sync/import/ de la maquina principal.")
 
 
 if __name__ == "__main__":
