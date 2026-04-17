@@ -10,49 +10,37 @@ IMPORT_DIR = ROOT / "sync" / "import"
 DB_FILE = ROOT / "data" / "forensic.db"
 
 
-def merge_file(conn: sqlite3.Connection, path: Path) -> tuple[int, int, int]:
-    """Returns (actas_merged, votos_merged, pdfs_merged)."""
+def merge_file(conn: sqlite3.Connection, path: Path) -> dict[str, int]:
+    """Returns counts per table merged."""
     with open(path, encoding="utf-8") as f:
         data = json.load(f)
 
     cur = conn.cursor()
-    a_count = v_count = p_count = 0
+    counts: dict[str, int] = {"actas": 0, "votos": 0, "pdfs": 0, "instalaciones": 0}
 
-    # Actas — INSERT OR IGNORE (no sobreescribir datos existentes)
-    for acta in data.get("actas", []):
-        cols = ", ".join(acta.keys())
-        placeholders = ", ".join("?" * len(acta))
-        cur.execute(
-            f"INSERT OR IGNORE INTO actas ({cols}) VALUES ({placeholders})",
-            list(acta.values())
-        )
-        if cur.rowcount:
-            a_count += 1
+    tables = [
+        ("actas", "actas"),
+        ("votos", "votos_por_mesa"),
+        ("pdfs", "pdfs"),
+        ("instalaciones", "instalaciones"),
+    ]
 
-    # Votos
-    for voto in data.get("votos", []):
-        cols = ", ".join(voto.keys())
-        placeholders = ", ".join("?" * len(voto))
-        cur.execute(
-            f"INSERT OR IGNORE INTO votos_por_mesa ({cols}) VALUES ({placeholders})",
-            list(voto.values())
-        )
-        if cur.rowcount:
-            v_count += 1
-
-    # PDFs metadata
-    for pdf in data.get("pdfs", []):
-        cols = ", ".join(pdf.keys())
-        placeholders = ", ".join("?" * len(pdf))
-        cur.execute(
-            f"INSERT OR IGNORE INTO pdfs ({cols}) VALUES ({placeholders})",
-            list(pdf.values())
-        )
-        if cur.rowcount:
-            p_count += 1
+    for json_key, table_name in tables:
+        for row in data.get(json_key, []):
+            cols = ", ".join(row.keys())
+            placeholders = ", ".join("?" * len(row))
+            try:
+                cur.execute(
+                    f"INSERT OR IGNORE INTO {table_name} ({cols}) VALUES ({placeholders})",
+                    list(row.values())
+                )
+                if cur.rowcount:
+                    counts[json_key] += 1
+            except sqlite3.OperationalError as e:
+                logger.warning("Skip %s row in %s: %s", table_name, path.name, e)
 
     conn.commit()
-    return a_count, v_count, p_count
+    return counts
 
 
 def main() -> None:
@@ -68,18 +56,19 @@ def main() -> None:
         return
 
     conn = sqlite3.connect(DB_FILE)
-    total_a = total_v = total_p = 0
+    totals: dict[str, int] = {"actas": 0, "votos": 0, "pdfs": 0, "instalaciones": 0}
 
-    for jf in json_files:
-        a, v, p = merge_file(conn, jf)
-        logger.info("%s → %d actas, %d votos, %d pdfs", jf.name, a, v, p)
-        total_a += a
-        total_v += v
-        total_p += p
+    for jf in sorted(json_files):
+        c = merge_file(conn, jf)
+        logger.info("%s -> actas=%d votos=%d pdfs=%d inst=%d",
+                     jf.name, c["actas"], c["votos"], c["pdfs"], c["instalaciones"])
+        for k in totals:
+            totals[k] += c[k]
 
     conn.close()
-    print(f"\n✓ Merge completo: {total_a} actas, {total_v} votos, {total_p} pdfs")
-    print(f"  Procesados: {len(json_files)} archivos")
+    print(f"\nMerge OK: {totals['actas']} actas, {totals['votos']} votos, "
+          f"{totals['pdfs']} pdfs, {totals['instalaciones']} instalaciones")
+    print(f"Procesados: {len(json_files)} archivos")
 
 
 if __name__ == "__main__":
