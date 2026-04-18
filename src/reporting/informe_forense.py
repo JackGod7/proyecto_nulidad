@@ -466,6 +466,34 @@ def _seccion_distrito(story, s, d):
     story.append(t_votos)
 
 
+def _resolver_distrito_db(distrito_nombre: str) -> str:
+    """Resuelve nombre exacto del distrito en DB (maneja acentos/case)."""
+    db_path = Path("data/forensic.db")
+    if not db_path.exists():
+        return distrito_nombre
+    conn = sqlite3.connect(str(db_path))
+    # Exacto
+    r = conn.execute("SELECT DISTINCT distrito FROM actas WHERE distrito=?", (distrito_nombre,)).fetchone()
+    if r:
+        conn.close()
+        return r[0]
+    # UPPER
+    r = conn.execute("SELECT DISTINCT distrito FROM actas WHERE UPPER(distrito)=UPPER(?)", (distrito_nombre,)).fetchone()
+    if r:
+        conn.close()
+        return r[0]
+    # LIKE con palabra mas larga
+    palabras = distrito_nombre.replace("_", " ").split()
+    if palabras:
+        keyword = max(palabras, key=len)
+        r = conn.execute("SELECT DISTINCT distrito FROM actas WHERE distrito LIKE ?", (f"%{keyword}%",)).fetchone()
+        if r:
+            conn.close()
+            return r[0]
+    conn.close()
+    return distrito_nombre
+
+
 def _datos_custodia(distrito_nombre: str) -> dict:
     """Consulta forensic.db para mesas sin acta pero con votos publicados."""
     db_path = Path("data/forensic.db")
@@ -473,45 +501,46 @@ def _datos_custodia(distrito_nombre: str) -> dict:
         return {"total": 0, "sin_escrutinio": 0, "sin_sufragio": 0,
                 "sin_instalacion": 0, "votos_sin_acta": 0, "mesas_ejemplo": []}
 
+    # Resolver nombre exacto con acentos
+    d = _resolver_distrito_db(distrito_nombre)
+
     conn = sqlite3.connect(str(db_path))
     cur = conn.cursor()
 
     cur.execute(
-        "SELECT COUNT(*) FROM actas WHERE UPPER(distrito)=UPPER(?) AND total_votantes > 0",
-        (distrito_nombre,))
+        "SELECT COUNT(*) FROM actas WHERE distrito=? AND total_votantes > 0",
+        (d,))
     total = cur.fetchone()[0]
 
     cur.execute(
-        "SELECT COUNT(*) FROM actas WHERE UPPER(distrito)=UPPER(?) "
+        "SELECT COUNT(*) FROM actas WHERE distrito=? "
         "AND total_votantes > 0 AND tiene_pdf_escrutinio = 0",
-        (distrito_nombre,))
+        (d,))
     sin_esc = cur.fetchone()[0]
 
     cur.execute(
-        "SELECT COUNT(*) FROM actas WHERE UPPER(distrito)=UPPER(?) "
+        "SELECT COUNT(*) FROM actas WHERE distrito=? "
         "AND total_votantes > 0 AND tiene_pdf_sufragio = 0",
-        (distrito_nombre,))
+        (d,))
     sin_suf = cur.fetchone()[0]
 
     cur.execute(
-        "SELECT COUNT(*) FROM actas WHERE UPPER(distrito)=UPPER(?) "
+        "SELECT COUNT(*) FROM actas WHERE distrito=? "
         "AND total_votantes > 0 AND tiene_pdf_instalacion = 0",
-        (distrito_nombre,))
+        (d,))
     sin_inst = cur.fetchone()[0]
 
-    # Votos totales en mesas sin acta de escrutinio
     cur.execute(
-        "SELECT COALESCE(SUM(total_votantes), 0) FROM actas WHERE UPPER(distrito)=UPPER(?) "
+        "SELECT COALESCE(SUM(total_votantes), 0) FROM actas WHERE distrito=? "
         "AND total_votantes > 0 AND tiene_pdf_escrutinio = 0",
-        (distrito_nombre,))
+        (d,))
     votos_sin = cur.fetchone()[0]
 
-    # Ejemplo: 5 mesas sin escrutinio con mas votos
     cur.execute(
         "SELECT mesa, total_electores, total_votantes, estado_acta FROM actas "
-        "WHERE UPPER(distrito)=UPPER(?) AND total_votantes > 0 AND tiene_pdf_escrutinio = 0 "
+        "WHERE distrito=? AND total_votantes > 0 AND tiene_pdf_escrutinio = 0 "
         "ORDER BY total_votantes DESC LIMIT 5",
-        (distrito_nombre,))
+        (d,))
     ejemplos = [{"mesa": str(r[0]).zfill(6), "electores": r[1],
                  "votantes": r[2], "estado": r[3]} for r in cur.fetchall()]
 

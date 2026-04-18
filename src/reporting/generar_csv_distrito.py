@@ -12,6 +12,27 @@ DB_FILE = ROOT / "data" / "forensic.db"
 ENTREGA = ROOT / "data" / "ENTREGA_ESTADISTICO"
 
 PARTIDOS_COLS = ["Voto_Rafael", "Voto_Nieto", "Voto_Keiko", "Voto_Belmont", "Voto_Roberto"]
+
+
+def _resolver_distrito(conn: sqlite3.Connection, distrito: str) -> str | None:
+    """Busca nombre exacto del distrito en DB (maneja acentos/case)."""
+    # Intento exacto
+    r = conn.execute("SELECT DISTINCT distrito FROM actas WHERE distrito=?", (distrito,)).fetchone()
+    if r:
+        return r[0]
+    # Intento UPPER
+    r = conn.execute("SELECT DISTINCT distrito FROM actas WHERE UPPER(distrito)=UPPER(?)", (distrito,)).fetchone()
+    if r:
+        return r[0]
+    # Intento LIKE con palabras clave
+    palabras = distrito.replace("_", " ").split()
+    if palabras:
+        # Usar la palabra mas larga como filtro
+        keyword = max(palabras, key=len)
+        r = conn.execute("SELECT DISTINCT distrito FROM actas WHERE distrito LIKE ?", (f"%{keyword}%",)).fetchone()
+        if r:
+            return r[0]
+    return None
 # Mapeo flexible: soporta dict {partido: votos} y list [{strNombreElector, intVotos}]
 PARTIDOS_MAP_DICT = {
     "RENOVACIÓN POPULAR": "Voto_Rafael",
@@ -47,12 +68,19 @@ def generar_csv_distrito(distrito: str) -> Path | None:
     conn = sqlite3.connect(DB_FILE)
     conn.row_factory = sqlite3.Row
 
+    # Resolver nombre exacto del distrito en DB
+    distrito_db = _resolver_distrito(conn, distrito)
+    if not distrito_db:
+        logger.warning("Distrito no encontrado en DB: %s", distrito)
+        conn.close()
+        return None
+
     # Instalaciones
     inst = conn.execute(
         "SELECT mesa, hora_instalacion_raw, hora_instalacion_min, "
         "total_electores_habiles, material_buen_estado, observaciones "
-        "FROM instalaciones WHERE UPPER(distrito)=UPPER(?) AND hora_instalacion_min IS NOT NULL",
-        (distrito,)
+        "FROM instalaciones WHERE distrito=? AND hora_instalacion_min IS NOT NULL",
+        (distrito_db,)
     ).fetchall()
 
     if not inst:
@@ -63,8 +91,8 @@ def generar_csv_distrito(distrito: str) -> Path | None:
     # Actas + votos
     actas = conn.execute(
         "SELECT mesa, local_votacion, estado_acta, total_electores, total_votantes, "
-        "votos_todos_json FROM actas WHERE UPPER(distrito)=UPPER(?)",
-        (distrito,)
+        "votos_todos_json FROM actas WHERE distrito=?",
+        (distrito_db,)
     ).fetchall()
     actas_map = {r["mesa"]: dict(r) for r in actas}
 
