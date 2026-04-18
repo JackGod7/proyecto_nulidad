@@ -1,0 +1,21 @@
+{
+  "archivos": {
+    "actas.ndjson.gz": {
+      "bytes": 72175,
+      "rows": 2744,
+      "sha256": "215ebefde2953622cb9ba0b123fb81cdde716213801587db44051a7cfe7aaec6"
+    },
+    "pdfs.ndjson.gz": {
+      "bytes": 105225,
+      "rows": 6905,
+      "sha256": "55d848d5bb04525607087c7755ef58792543c58578deca33b32b1e043350d89c"
+    }
+  },
+  "distrito": "SAN JUAN DE LURIGANCHO",
+  "exported_at": "2026-04-18T17:39:22+00:00",
+  "maquina": "DETI-0013",
+  "operador": "jaaguilar",
+  "schema_version": 2,
+  "slug": "SAN_JUAN_DE_LURIGANCHO",
+  "total_rows": 9649
+}

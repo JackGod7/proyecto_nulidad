@@ -1,0 +1,16 @@
+{
+  "archivos": {
+    "actas.ndjson.gz": {
+      "bytes": 653,
+      "rows": 6,
+      "sha256": "52eba9a8374900a444a99fcbca5dfdb2269684ec98d61463134189146a36621b"
+    }
+  },
+  "distrito": "SANTA MARÍA DEL MAR",
+  "exported_at": "2026-04-18T17:39:25+00:00",
+  "maquina": "DETI-0013",
+  "operador": "jaaguilar",
+  "schema_version": 2,
+  "slug": "SANTA_MARIA_DEL_MAR",
+  "total_rows": 6
+}

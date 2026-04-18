@@ -119,7 +119,6 @@ def extraer_fila_completa(api_response: dict[str, Any]) -> dict[str, Any]:
         "votos_validos": acta.get("totalVotosValidos"),
         "participacion_pct": acta.get("porcentajeParticipacionCiudadana"),
 
-        "votos_todos_json": json.dumps(votos["partidos"], ensure_ascii=False),
         "votos_blanco": votos["blanco"],
         "votos_nulos": votos["nulos"],
         "votos_impugnados": votos["impugnados"],
@@ -128,8 +127,10 @@ def extraer_fila_completa(api_response: dict[str, Any]) -> dict[str, Any]:
         "tiene_pdf_instalacion": 1 if 3 in tipos_pdf else 0,
         "tiene_pdf_sufragio": 1 if 4 in tipos_pdf else 0,
 
-        "api_response_raw": json.dumps(api_response, ensure_ascii=False),
+        # Solo hash (raw se descarta para no inflar DB / contexto)
         "api_response_hash": _hash_json(api_response),
+        "partidos_detalle": votos["partidos"],
+        "linea_tiempo": acta.get("lineaTiempo") or [],
 
         "tiene_datos": 1 if detalle else 0,
         "operador": getpass.getuser(),

@@ -1,0 +1,21 @@
+{
+  "archivos": {
+    "actas.ndjson.gz": {
+      "bytes": 1261,
+      "rows": 25,
+      "sha256": "dd4717c05433269204883226693660505997bfa771a1022988da3f1771285d86"
+    },
+    "pdfs.ndjson.gz": {
+      "bytes": 752,
+      "rows": 23,
+      "sha256": "9fc784b86e176178f54de88295480ae627b06db93e6d2d53d7bac5762cfe2326"
+    }
+  },
+  "distrito": "PUNTA NEGRA",
+  "exported_at": "2026-04-18T17:39:21+00:00",
+  "maquina": "DETI-0013",
+  "operador": "jaaguilar",
+  "schema_version": 2,
+  "slug": "PUNTA_NEGRA",
+  "total_rows": 48
+}

@@ -1,0 +1,31 @@
+{
+  "archivos": {
+    "acta_estado_historial.ndjson.gz": {
+      "bytes": 6266,
+      "rows": 389,
+      "sha256": "19ad0fc732d272f9ef529175fbf28884618e7326a6b5f84c22cf3ea0af0c4799"
+    },
+    "actas.ndjson.gz": {
+      "bytes": 25080,
+      "rows": 337,
+      "sha256": "5e371b5a93bcd23a0a7e449e0647e237e2b6e7a1501dc4a9cef8acb18401c622"
+    },
+    "pdfs.ndjson.gz": {
+      "bytes": 14712,
+      "rows": 949,
+      "sha256": "1167397e13eb74f9b0677eb023ebbf02afa7c99756efb25c8e7e0e160559425e"
+    },
+    "votos.ndjson.gz": {
+      "bytes": 110953,
+      "rows": 12806,
+      "sha256": "7049c9c59394cc65c67f8c4b8e0c2cda91549126614870e5054b86e3bafa9f4c"
+    }
+  },
+  "distrito": "SURQUILLO",
+  "exported_at": "2026-04-18T17:39:27+00:00",
+  "maquina": "DETI-0013",
+  "operador": "jaaguilar",
+  "schema_version": 2,
+  "slug": "SURQUILLO",
+  "total_rows": 14481
+}

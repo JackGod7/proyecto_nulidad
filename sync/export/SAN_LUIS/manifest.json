@@ -1,0 +1,21 @@
+{
+  "archivos": {
+    "actas.ndjson.gz": {
+      "bytes": 5778,
+      "rows": 191,
+      "sha256": "51589f5d4552af1f37a9c1c9929629925e8258d5204fab9f540fe14892260c58"
+    },
+    "pdfs.ndjson.gz": {
+      "bytes": 7841,
+      "rows": 493,
+      "sha256": "fb8e40192ad714a843bc64ebb20f8b2e49695189a0ffd3034ee2084c3e6214f0"
+    }
+  },
+  "distrito": "SAN LUIS",
+  "exported_at": "2026-04-18T17:39:24+00:00",
+  "maquina": "DETI-0013",
+  "operador": "jaaguilar",
+  "schema_version": 2,
+  "slug": "SAN_LUIS",
+  "total_rows": 684
+}

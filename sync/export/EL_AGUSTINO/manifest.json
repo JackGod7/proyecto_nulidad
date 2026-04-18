@@ -1,0 +1,21 @@
+{
+  "archivos": {
+    "actas.ndjson.gz": {
+      "bytes": 15408,
+      "rows": 572,
+      "sha256": "5f3d01c45a8260cf5675de98c760aaf519444a2c5fce7221548a34f9718a1c48"
+    },
+    "pdfs.ndjson.gz": {
+      "bytes": 21795,
+      "rows": 1382,
+      "sha256": "2e9cf64664acef6024c78d739a3157e9b8b49b776a33935053c9dc6c3530a232"
+    }
+  },
+  "distrito": "EL AGUSTINO",
+  "exported_at": "2026-04-18T17:39:15+00:00",
+  "maquina": "DETI-0013",
+  "operador": "jaaguilar",
+  "schema_version": 2,
+  "slug": "EL_AGUSTINO",
+  "total_rows": 1954
+}

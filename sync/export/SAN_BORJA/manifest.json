@@ -1,0 +1,31 @@
+{
+  "archivos": {
+    "acta_estado_historial.ndjson.gz": {
+      "bytes": 8715,
+      "rows": 548,
+      "sha256": "1b59f3406a81fec6b1fc9a64b443f82b6348cb76f8288920c0691265d0698189"
+    },
+    "actas.ndjson.gz": {
+      "bytes": 30669,
+      "rows": 420,
+      "sha256": "510470ecc21df27999a744aec7393c0cc36fcc382a3488d14344454142c0a02e"
+    },
+    "pdfs.ndjson.gz": {
+      "bytes": 17634,
+      "rows": 1110,
+      "sha256": "d7f70ab2e499a67f8ddaa1e8140df24fbca238c2cc875c397d530bedab21c0e1"
+    },
+    "votos.ndjson.gz": {
+      "bytes": 205477,
+      "rows": 15960,
+      "sha256": "588057645770c1c0a3e8bde4dd58a921f473daa0bdc515062d06dcf04b17e2e9"
+    }
+  },
+  "distrito": "SAN BORJA",
+  "exported_at": "2026-04-18T17:39:21+00:00",
+  "maquina": "DETI-0013",
+  "operador": "jaaguilar",
+  "schema_version": 2,
+  "slug": "SAN_BORJA",
+  "total_rows": 18038
+}

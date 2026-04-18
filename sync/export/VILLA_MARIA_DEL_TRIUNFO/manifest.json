@@ -1,0 +1,36 @@
+{
+  "archivos": {
+    "acta_estado_historial.ndjson.gz": {
+      "bytes": 20012,
+      "rows": 1350,
+      "sha256": "30b5706f2ffad5f7bd03614f00008a9a5ab0697d0f44838a806ef8d8d152e91e"
+    },
+    "actas.ndjson.gz": {
+      "bytes": 89191,
+      "rows": 1241,
+      "sha256": "4276c687354f7d2fda635d9fddbe97fd81a3cf79f51db344b42010b03c2236a5"
+    },
+    "instalaciones.ndjson.gz": {
+      "bytes": 1432,
+      "rows": 51,
+      "sha256": "3f6baf38172116832d8c115ac04ab1a027774424a6b1786f66ca18bf2fee7c1c"
+    },
+    "pdfs.ndjson.gz": {
+      "bytes": 55533,
+      "rows": 3651,
+      "sha256": "25f180b0fc39712f2f29a1ef1c774b12f52caf1ba38898f68ac79e6a905864bf"
+    },
+    "votos.ndjson.gz": {
+      "bytes": 407531,
+      "rows": 47082,
+      "sha256": "13381f5c73af6469b7b4e8c05198c746eb6302ea8b13a03ce339a7e456dfe784"
+    }
+  },
+  "distrito": "VILLA MARÍA DEL TRIUNFO",
+  "exported_at": "2026-04-18T17:39:29+00:00",
+  "maquina": "DETI-0013",
+  "operador": "jaaguilar",
+  "schema_version": 2,
+  "slug": "VILLA_MARIA_DEL_TRIUNFO",
+  "total_rows": 53375
+}

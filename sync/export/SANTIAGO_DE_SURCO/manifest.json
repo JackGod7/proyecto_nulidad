@@ -1,0 +1,36 @@
+{
+  "archivos": {
+    "acta_estado_historial.ndjson.gz": {
+      "bytes": 24041,
+      "rows": 1599,
+      "sha256": "6171cadf99ac65539958a3c0daa8fe96b346c67d667d1f5f86308cc2ba798041"
+    },
+    "actas.ndjson.gz": {
+      "bytes": 84615,
+      "rows": 1184,
+      "sha256": "5f463313f72ca472b69a9dabd89917be0976cd61bf5b90730d9ca5a414941367"
+    },
+    "instalaciones.ndjson.gz": {
+      "bytes": 30112,
+      "rows": 995,
+      "sha256": "5d4237681bdb1f18298a53db142436de1743e36d2d6e4d2f7fe254ced5ab7d86"
+    },
+    "pdfs.ndjson.gz": {
+      "bytes": 198538,
+      "rows": 3069,
+      "sha256": "417b3cea2c7b747b21ed787c3edba61ca392829ff93360fc05e0c19bfd48e232"
+    },
+    "votos.ndjson.gz": {
+      "bytes": 568461,
+      "rows": 44308,
+      "sha256": "12d8a14963100a5d03eeb2cbac8a5012c254563e1a5e009020aeaca42a19a143"
+    }
+  },
+  "distrito": "SANTIAGO DE SURCO",
+  "exported_at": "2026-04-18T17:39:25+00:00",
+  "maquina": "DETI-0013",
+  "operador": "jaaguilar",
+  "schema_version": 2,
+  "slug": "SANTIAGO_DE_SURCO",
+  "total_rows": 51155
+}

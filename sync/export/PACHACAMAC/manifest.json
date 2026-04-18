@@ -1,0 +1,31 @@
+{
+  "archivos": {
+    "acta_estado_historial.ndjson.gz": {
+      "bytes": 9852,
+      "rows": 614,
+      "sha256": "737d19723d93d29d07ff24712853a2a14cca0443ab5e4df7c03f8379e25f2d12"
+    },
+    "actas.ndjson.gz": {
+      "bytes": 23820,
+      "rows": 315,
+      "sha256": "3dc2b0cdddb086b95340f99ac8a5047d09c2037652f5837870cd9195914c76d4"
+    },
+    "pdfs.ndjson.gz": {
+      "bytes": 33542,
+      "rows": 496,
+      "sha256": "934f0eb8f55a0eb63d150f0bd6a24c1b466d6266c667a9fc21d330b4d5df7584"
+    },
+    "votos.ndjson.gz": {
+      "bytes": 95590,
+      "rows": 11020,
+      "sha256": "98c27043f2477838921e1d0feb0ca3e62fad87ded8336b7f3035ccff2fc6d668"
+    }
+  },
+  "distrito": "PACHACÁMAC",
+  "exported_at": "2026-04-18T17:39:19+00:00",
+  "maquina": "DETI-0013",
+  "operador": "jaaguilar",
+  "schema_version": 2,
+  "slug": "PACHACAMAC",
+  "total_rows": 12445
+}

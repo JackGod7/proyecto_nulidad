@@ -1,0 +1,31 @@
+{
+  "archivos": {
+    "acta_estado_historial.ndjson.gz": {
+      "bytes": 5374,
+      "rows": 349,
+      "sha256": "f8d792e2ebc6fe7495ea68c03807e941d0b64730ab16bd1429187d2bc114bb7b"
+    },
+    "actas.ndjson.gz": {
+      "bytes": 24620,
+      "rows": 337,
+      "sha256": "d2c21bd27806501ea8a844cfbf8c6feed8f3da220d8f6a8e4f80342cd375c593"
+    },
+    "pdfs.ndjson.gz": {
+      "bytes": 15393,
+      "rows": 1005,
+      "sha256": "a447e096ab66d82df072a02d6770024b651a264153d13f1be1535bac19f3215e"
+    },
+    "votos.ndjson.gz": {
+      "bytes": 170046,
+      "rows": 12806,
+      "sha256": "2479f9b044cc57bdd7f3d9d43a415e3274ec943736f12f5efaa0a199955dff25"
+    }
+  },
+  "distrito": "PUEBLO LIBRE",
+  "exported_at": "2026-04-18T17:39:20+00:00",
+  "maquina": "DETI-0013",
+  "operador": "jaaguilar",
+  "schema_version": 2,
+  "slug": "PUEBLO_LIBRE",
+  "total_rows": 14497
+}

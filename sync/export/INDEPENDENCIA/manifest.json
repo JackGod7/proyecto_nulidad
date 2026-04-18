@@ -1,0 +1,21 @@
+{
+  "archivos": {
+    "actas.ndjson.gz": {
+      "bytes": 16074,
+      "rows": 595,
+      "sha256": "ed15e477a9454ab70d8c04c30d47ba2813de64bc164c93a2f961409df8283608"
+    },
+    "pdfs.ndjson.gz": {
+      "bytes": 23571,
+      "rows": 1524,
+      "sha256": "add698f08f7930fd9719b87a272db6971d5259092f644bd6e30e4d85da392d86"
+    }
+  },
+  "distrito": "INDEPENDENCIA",
+  "exported_at": "2026-04-18T17:39:15+00:00",
+  "maquina": "DETI-0013",
+  "operador": "jaaguilar",
+  "schema_version": 2,
+  "slug": "INDEPENDENCIA",
+  "total_rows": 2119
+}

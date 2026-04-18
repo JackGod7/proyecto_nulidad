@@ -1,0 +1,31 @@
+{
+  "archivos": {
+    "acta_estado_historial.ndjson.gz": {
+      "bytes": 9375,
+      "rows": 601,
+      "sha256": "a507b09dd9d8f5b9088f666a68f252f4efe5c3735a272f2b946d4c7c7dc8592c"
+    },
+    "actas.ndjson.gz": {
+      "bytes": 42308,
+      "rows": 571,
+      "sha256": "b1750580512172a41dfc15c9320f341f6a67d663cc4e887d10d5a3c6d993b667"
+    },
+    "pdfs.ndjson.gz": {
+      "bytes": 25068,
+      "rows": 1638,
+      "sha256": "1190c0d1925943abfb486def83e58b38f5d0d825ba89d318b493c454b7d2f1e4"
+    },
+    "votos.ndjson.gz": {
+      "bytes": 251978,
+      "rows": 21622,
+      "sha256": "a007c4af506f4745821c962bb68efd0fe24e20de4c845ec7f4da65882b50fd8f"
+    }
+  },
+  "distrito": "LA MOLINA",
+  "exported_at": "2026-04-18T17:39:16+00:00",
+  "maquina": "DETI-0013",
+  "operador": "jaaguilar",
+  "schema_version": 2,
+  "slug": "LA_MOLINA",
+  "total_rows": 24432
+}

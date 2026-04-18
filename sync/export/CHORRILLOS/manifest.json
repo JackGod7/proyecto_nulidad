@@ -1,0 +1,21 @@
+{
+  "archivos": {
+    "actas.ndjson.gz": {
+      "bytes": 24104,
+      "rows": 896,
+      "sha256": "33f46f05e0004ce586e6a921ffd1e24e31d3b4fa0c8e5cb7ec0e8789e4926d27"
+    },
+    "pdfs.ndjson.gz": {
+      "bytes": 33920,
+      "rows": 2225,
+      "sha256": "2fddde454138dcb67c0e742cf5774fda8e4a80adaab02d46e6bbed2ac4474f48"
+    }
+  },
+  "distrito": "CHORRILLOS",
+  "exported_at": "2026-04-18T17:39:14+00:00",
+  "maquina": "DETI-0013",
+  "operador": "jaaguilar",
+  "schema_version": 2,
+  "slug": "CHORRILLOS",
+  "total_rows": 3121
+}

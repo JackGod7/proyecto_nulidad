@@ -1,0 +1,31 @@
+{
+  "archivos": {
+    "acta_estado_historial.ndjson.gz": {
+      "bytes": 10690,
+      "rows": 672,
+      "sha256": "0fe8d980f244c9bde3c37aa26a510926cb6e853685c5542809a6de1872ddbdf6"
+    },
+    "actas.ndjson.gz": {
+      "bytes": 47379,
+      "rows": 642,
+      "sha256": "603117c05c7d36567720afb216501105585cfeb26f5a5579c3899233592f2a5a"
+    },
+    "pdfs.ndjson.gz": {
+      "bytes": 26046,
+      "rows": 1653,
+      "sha256": "65504d09e2607393cb33c10057a088a35fe5cd6154c44c13df59269152ee3d86"
+    },
+    "votos.ndjson.gz": {
+      "bytes": 311295,
+      "rows": 22724,
+      "sha256": "9488aa32bc16c603103b1ec18220c88a8f739909f7b06bc1b8e204d0b57bae4b"
+    }
+  },
+  "distrito": "LA VICTORIA",
+  "exported_at": "2026-04-18T17:39:16+00:00",
+  "maquina": "DETI-0013",
+  "operador": "jaaguilar",
+  "schema_version": 2,
+  "slug": "LA_VICTORIA",
+  "total_rows": 25691
+}

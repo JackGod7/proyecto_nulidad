@@ -1,0 +1,31 @@
+{
+  "archivos": {
+    "acta_estado_historial.ndjson.gz": {
+      "bytes": 7459,
+      "rows": 470,
+      "sha256": "9c12b7ebf933241625e22714d854f4db0eae9a6b3b3a7eeabab81a7e6952d8fe"
+    },
+    "actas.ndjson.gz": {
+      "bytes": 31548,
+      "rows": 431,
+      "sha256": "ef9b2fc632e072182842a04b2c5d1eca57fb04f788015cf339ef99743d657d82"
+    },
+    "pdfs.ndjson.gz": {
+      "bytes": 18484,
+      "rows": 1205,
+      "sha256": "a25f26c77882a6cd8168ae3116fc16e3fc225846df4f39594a300d18dc950e56"
+    },
+    "votos.ndjson.gz": {
+      "bytes": 217274,
+      "rows": 16264,
+      "sha256": "da90ed093b1b21b39fd93166ea2f8cd2a557170f868d78ceb623aa8c8a832ae3"
+    }
+  },
+  "distrito": "JESÚS MARÍA",
+  "exported_at": "2026-04-18T17:39:15+00:00",
+  "maquina": "DETI-0013",
+  "operador": "jaaguilar",
+  "schema_version": 2,
+  "slug": "JESUS_MARIA",
+  "total_rows": 18370
+}

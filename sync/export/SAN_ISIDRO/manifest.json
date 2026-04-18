@@ -1,0 +1,36 @@
+{
+  "archivos": {
+    "acta_estado_historial.ndjson.gz": {
+      "bytes": 5322,
+      "rows": 329,
+      "sha256": "accbcf03c25bf284396c661680e874a5ab813608efacecadf91b900e45ee5f0a"
+    },
+    "actas.ndjson.gz": {
+      "bytes": 20669,
+      "rows": 281,
+      "sha256": "8e42f98c5ba97f2cd62ea585268749d913b49241fabf5420764db87e20e461af"
+    },
+    "instalaciones.ndjson.gz": {
+      "bytes": 7687,
+      "rows": 251,
+      "sha256": "77213503d5b213314429e4338ab2c89e1599d3041d8770c00b935d5d1ce63316"
+    },
+    "pdfs.ndjson.gz": {
+      "bytes": 49522,
+      "rows": 764,
+      "sha256": "ac797db251ea40e350577ce0f9c8dc2a8f6f43bd7d5a955f79f605079caf96ba"
+    },
+    "votos.ndjson.gz": {
+      "bytes": 89992,
+      "rows": 10488,
+      "sha256": "d044c41f135531c0fcb0ed6303a80953958ff6106594117446ae9343b2bdbc86"
+    }
+  },
+  "distrito": "SAN ISIDRO",
+  "exported_at": "2026-04-18T17:39:22+00:00",
+  "maquina": "DETI-0013",
+  "operador": "jaaguilar",
+  "schema_version": 2,
+  "slug": "SAN_ISIDRO",
+  "total_rows": 12113
+}

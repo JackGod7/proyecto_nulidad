@@ -1,0 +1,21 @@
+{
+  "archivos": {
+    "actas.ndjson.gz": {
+      "bytes": 44363,
+      "rows": 1650,
+      "sha256": "89259f0ccdbe99cad975a19e4e4d39491056ef3b74ed9ccafb4f473d9cf955c0"
+    },
+    "pdfs.ndjson.gz": {
+      "bytes": 63683,
+      "rows": 4212,
+      "sha256": "2083f9f9c59d7aa22de1b8da4f7e3f1e00a69b962ccd9e61ac5ffc59f3f1746d"
+    }
+  },
+  "distrito": "ATE",
+  "exported_at": "2026-04-18T17:39:13+00:00",
+  "maquina": "DETI-0013",
+  "operador": "jaaguilar",
+  "schema_version": 2,
+  "slug": "ATE",
+  "total_rows": 5862
+}

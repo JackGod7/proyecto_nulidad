@@ -1,0 +1,21 @@
+{
+  "archivos": {
+    "actas.ndjson.gz": {
+      "bytes": 4265,
+      "rows": 139,
+      "sha256": "9e4d2b93d40a6c7276fc1c2ee8816a81b48924eb6f7bccb4e67be67d23f82d04"
+    },
+    "pdfs.ndjson.gz": {
+      "bytes": 4519,
+      "rows": 267,
+      "sha256": "894ad3aa6f035ab3eefbf80ae7a85bd4b8aa09417e0378b898bc856ddb9953cf"
+    }
+  },
+  "distrito": "CHACLACAYO",
+  "exported_at": "2026-04-18T17:39:14+00:00",
+  "maquina": "DETI-0013",
+  "operador": "jaaguilar",
+  "schema_version": 2,
+  "slug": "CHACLACAYO",
+  "total_rows": 406
+}
