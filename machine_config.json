@@ -1,9 +1,8 @@
 {
-  "_comment": "MAQUINA_2 - Batch 2: 7 distritos Lima. Rama git: maquina-2",
-  "machine_id": "MAQUINA_2",
-  "owner": "Tony",
-  "lote": 2,
-  "distritos": ["LURÍN", "PACHACÁMAC", "MAGDALENA DEL MAR", "PUEBLO LIBRE", "LINCE", "SAN LUIS", "BARRANCO"],
+  "_comment": "Maquina Jack - Cono Sur: VMT + Chorrillos (gap mayor)",
+  "machine_id": "MAQUINA_JACK",
+  "owner": "Jack",
+  "distritos": ["VILLA MARIA DEL TRIUNFO", "CHORRILLOS"],
   "rol": "worker",
-  "fase_actual": "extraccion"
+  "fase_actual": "scraping"
 }
