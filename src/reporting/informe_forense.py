@@ -756,6 +756,8 @@ DISTRITOS = [
      "data/ENTREGA_ESTADISTICO/SANTIAGO_DE_SURCO/SANTIAGO_DE_SURCO_horas_y_votos.csv"),
     ("ves", "Villa El Salvador",
      "data/ENTREGA_ESTADISTICO/VILLA_EL_SALVADOR/VILLA_EL_SALVADOR_horas_y_votos.csv"),
+    ("magdalena", "Magdalena del Mar",
+     "data/ENTREGA_ESTADISTICO/MAGDALENA_DEL_MAR/MAGDALENA_DEL_MAR_horas_y_votos.csv"),
 ]
 
 
