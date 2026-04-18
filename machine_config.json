@@ -1,9 +1,9 @@
 {
-  "_comment": "MAQUINA_2 - Lote 1 Lima Sur (LURIN + PACHACAMAC). Rama git: maquina-2",
-  "machine_id": "MAQUINA_2",
+  "_comment": "MAQUINA_4 - Lote 2 Lima Sur (VMT + VES). Rama git: maquina-4",
+  "machine_id": "MAQUINA_4",
   "owner": "Tony",
-  "lote": 1,
-  "distritos": ["LUR�N", "PACHAC�MAC"],
+  "lote": 2,
+  "distritos": ["VILLA MARÍA DEL TRIUNFO", "VILLA EL SALVADOR"],
   "rol": "worker",
-  "fase_actual": "scraping"
+  "fase_actual": "extraccion"
 }
