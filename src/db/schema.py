@@ -91,9 +91,9 @@ def init_forensic_db() -> sqlite3.Connection:
             tiene_pdf_instalacion INTEGER DEFAULT 0,
             tiene_pdf_sufragio INTEGER DEFAULT 0,
 
-            -- Cedulas (flag: votos publicados sin acta cargada)
-            flag_sin_cedula INTEGER DEFAULT 0,
-            cedulas_faltantes INTEGER DEFAULT 0,
+            -- Acta presidencial (flag: votos publicados sin acta escrutinio)
+            flag_sin_acta INTEGER DEFAULT 0,
+            actas_faltantes INTEGER DEFAULT 0,
 
             -- Raw API (evidencia legal)
             api_response_raw TEXT,
@@ -333,10 +333,10 @@ def init_forensic_db() -> sqlite3.Connection:
             flags_nulos_alto INTEGER DEFAULT 0,
             flags_error_aritmetico INTEGER DEFAULT 0,
 
-            -- Cedulas faltantes
-            mesas_sin_cedula INTEGER DEFAULT 0,
-            total_cedulas_faltantes INTEGER DEFAULT 0,
-            votos_sin_cedula INTEGER DEFAULT 0,
+            -- Actas presidenciales faltantes
+            mesas_sin_acta INTEGER DEFAULT 0,
+            actas_faltantes INTEGER DEFAULT 0,
+            votos_sin_acta INTEGER DEFAULT 0,
 
             snapshots_count INTEGER DEFAULT 0,
             cambios_detectados INTEGER DEFAULT 0,
@@ -674,66 +674,61 @@ def migrate_v1_to_v2() -> None:
     v2.close()
 
 
-def poblar_cedulas() -> dict:
-    """Puebla flag_sin_cedula y cedulas_faltantes en actas + resumen en auditoria_distrito."""
+def poblar_actas_faltantes() -> dict:
+    """Puebla flag_sin_acta en actas (votos publicados sin acta escrutinio presidencial)."""
     conn = get_conn()
 
     # Migrar columnas si no existen
-    for col, default in [("flag_sin_cedula", 0), ("cedulas_faltantes", 0)]:
+    for col in ["flag_sin_acta", "actas_faltantes"]:
         try:
-            conn.execute(f"ALTER TABLE actas ADD COLUMN {col} INTEGER DEFAULT {default}")
+            conn.execute(f"ALTER TABLE actas ADD COLUMN {col} INTEGER DEFAULT 0")
         except sqlite3.OperationalError:
-            pass  # Already exists
-    for col in ["mesas_sin_cedula", "total_cedulas_faltantes", "votos_sin_cedula"]:
+            pass
+    for col in ["mesas_sin_acta", "actas_faltantes", "votos_sin_acta"]:
         try:
             conn.execute(f"ALTER TABLE auditoria_distrito ADD COLUMN {col} INTEGER DEFAULT 0")
         except sqlite3.OperationalError:
             pass
 
-    # Calcular flag por mesa: votos publicados pero falta alguna cedula
+    # Flag: votos publicados sin acta de escrutinio presidencial
     conn.execute("""
         UPDATE actas SET
-            cedulas_faltantes = (
-                CASE WHEN total_votantes > 0 AND tiene_pdf_escrutinio = 0 THEN 1 ELSE 0 END
-                + CASE WHEN total_votantes > 0 AND tiene_pdf_sufragio = 0 THEN 1 ELSE 0 END
-                + CASE WHEN total_votantes > 0 AND tiene_pdf_instalacion = 0 THEN 1 ELSE 0 END
-            ),
-            flag_sin_cedula = CASE
-                WHEN total_votantes > 0 AND (tiene_pdf_escrutinio = 0 OR tiene_pdf_sufragio = 0 OR tiene_pdf_instalacion = 0)
-                THEN 1 ELSE 0
+            flag_sin_acta = CASE
+                WHEN total_votantes > 0 AND tiene_pdf_escrutinio = 0 THEN 1 ELSE 0
+            END,
+            actas_faltantes = CASE
+                WHEN total_votantes > 0 AND tiene_pdf_escrutinio = 0 THEN 1 ELSE 0
             END
     """)
     conn.commit()
 
-    updated = conn.execute("SELECT SUM(flag_sin_cedula), SUM(cedulas_faltantes) FROM actas").fetchone()
-    mesas_flag = updated[0] or 0
-    total_faltantes = updated[1] or 0
+    updated = conn.execute("SELECT SUM(flag_sin_acta) FROM actas").fetchone()
+    mesas_sin = updated[0] or 0
 
     # Resumen por distrito
     rows = conn.execute("""
         SELECT distrito,
-               SUM(flag_sin_cedula) as mesas,
-               SUM(cedulas_faltantes) as cedulas,
-               COALESCE(SUM(CASE WHEN flag_sin_cedula=1 THEN total_votantes ELSE 0 END), 0) as votos
+               SUM(flag_sin_acta) as mesas,
+               SUM(actas_faltantes) as actas,
+               COALESCE(SUM(CASE WHEN flag_sin_acta=1 THEN total_votantes ELSE 0 END), 0) as votos
         FROM actas
         GROUP BY distrito
     """).fetchall()
 
-    for d, m, c, v in rows:
+    for d, m, a, v in rows:
         conn.execute("""
             UPDATE auditoria_distrito SET
-                mesas_sin_cedula=?, total_cedulas_faltantes=?, votos_sin_cedula=?
+                mesas_sin_acta=?, actas_faltantes=?, votos_sin_acta=?
             WHERE distrito=?
-        """, (m or 0, c or 0, v or 0, d))
+        """, (m or 0, a or 0, v or 0, d))
     conn.commit()
 
     result = {
-        "mesas_sin_cedula": mesas_flag,
-        "cedulas_faltantes": total_faltantes,
+        "mesas_sin_acta_presidencial": mesas_sin,
     }
-    log_custodia(conn, "CEDULAS_POBLADAS", detalle=result)
+    log_custodia(conn, "ACTAS_FALTANTES_POBLADAS", detalle=result)
     conn.close()
-    logger.info("Cedulas: %s", result)
+    logger.info("Actas faltantes: %s", result)
     return result
 
 
