@@ -1,0 +1,21 @@
+{
+  "archivos": {
+    "actas.ndjson.gz": {
+      "bytes": 15245,
+      "rows": 548,
+      "sha256": "13c7b7dc40e6c06bb49027cd727f64a1fff82157db330a6b3b6c7221c657973c"
+    },
+    "pdfs.ndjson.gz": {
+      "bytes": 17840,
+      "rows": 1116,
+      "sha256": "43c726676b3eaf794906412a0009b055405a08a81d9f48d7df2fe65ad5eb01f4"
+    }
+  },
+  "distrito": "LURIGANCHO",
+  "exported_at": "2026-04-18T17:39:18+00:00",
+  "maquina": "DETI-0013",
+  "operador": "jaaguilar",
+  "schema_version": 2,
+  "slug": "LURIGANCHO",
+  "total_rows": 1664
+}

@@ -1,0 +1,31 @@
+{
+  "archivos": {
+    "acta_estado_historial.ndjson.gz": {
+      "bytes": 2491,
+      "rows": 150,
+      "sha256": "4b04728e796ac0fb68db78dfc5579ad5f3bca3c8f368d1615d571ec4c0f54022"
+    },
+    "actas.ndjson.gz": {
+      "bytes": 11592,
+      "rows": 151,
+      "sha256": "fca40caa6cc01c26d4883f43d466db2a84b445a4b3f894de48bc1eeaea0fe51e"
+    },
+    "pdfs.ndjson.gz": {
+      "bytes": 6912,
+      "rows": 441,
+      "sha256": "0fc2e6fda4777e783c645ad405ffff10f9cd559768709ae4adc7cabcb224e3fe"
+    },
+    "votos.ndjson.gz": {
+      "bytes": 49485,
+      "rows": 5662,
+      "sha256": "039683aba7428ab39075728d5749d66e8bb24a506a17e3765a8a2f58304d96c3"
+    }
+  },
+  "distrito": "BARRANCO",
+  "exported_at": "2026-04-18T17:39:13+00:00",
+  "maquina": "DETI-0013",
+  "operador": "jaaguilar",
+  "schema_version": 2,
+  "slug": "BARRANCO",
+  "total_rows": 6404
+}

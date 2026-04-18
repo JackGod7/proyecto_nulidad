@@ -1,0 +1,21 @@
+{
+  "archivos": {
+    "actas.ndjson.gz": {
+      "bytes": 23414,
+      "rows": 889,
+      "sha256": "ddd049634175677e4e5ce17dcd6e55e938488f2b6a49a1efd6f58ebad2d3a071"
+    },
+    "pdfs.ndjson.gz": {
+      "bytes": 35103,
+      "rows": 2319,
+      "sha256": "07232d37857d6b0fac73ace1e18f7f74776f2572e88aac9fa2c8d81dbbc1f0fa"
+    }
+  },
+  "distrito": "PUENTE PIEDRA",
+  "exported_at": "2026-04-18T17:39:20+00:00",
+  "maquina": "DETI-0013",
+  "operador": "jaaguilar",
+  "schema_version": 2,
+  "slug": "PUENTE_PIEDRA",
+  "total_rows": 3208
+}

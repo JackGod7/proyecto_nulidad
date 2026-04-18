@@ -1,0 +1,21 @@
+{
+  "archivos": {
+    "actas.ndjson.gz": {
+      "bytes": 9924,
+      "rows": 355,
+      "sha256": "0f14208543aff7ea94ccb8a76da994c2134e33d287797af626ae0194a5dfa717"
+    },
+    "pdfs.ndjson.gz": {
+      "bytes": 15292,
+      "rows": 997,
+      "sha256": "674c594e8353217f2b1c6b4e4aa83829dcc79330e4eb21cc19c7ca477400d0ec"
+    }
+  },
+  "distrito": "BREÑA",
+  "exported_at": "2026-04-18T17:39:13+00:00",
+  "maquina": "DETI-0013",
+  "operador": "jaaguilar",
+  "schema_version": 2,
+  "slug": "BRENA",
+  "total_rows": 1352
+}

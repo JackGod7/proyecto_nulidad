@@ -98,7 +98,6 @@ def _ensure_tabla_instalacion(conn) -> None:
             total_electores_habiles INTEGER,
             material_buen_estado INTEGER,
             observaciones TEXT,
-            gemini_raw TEXT,
             extraido_at TEXT,
             error TEXT
         )
@@ -167,8 +166,8 @@ def procesar_instalaciones(
                    (mesa, acta_id, archivo_id, distrito,
                     local_votacion, hora_instalacion_raw, hora_instalacion_min,
                     total_electores_habiles, material_buen_estado,
-                    observaciones, gemini_raw, extraido_at)
-                   VALUES (?,?,?,?,?,?,?,?,?,?,?,datetime('now'))""",
+                    observaciones, extraido_at)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,datetime('now'))""",
                 (
                     data.get("mesa") or row["mesa"],
                     row["acta_id"],
@@ -180,7 +179,6 @@ def procesar_instalaciones(
                     data.get("total_electores_habiles"),
                     1 if data.get("material_buen_estado") else 0,
                     obs,
-                    json.dumps(data, ensure_ascii=False),
                 ),
             )
             conn.commit()

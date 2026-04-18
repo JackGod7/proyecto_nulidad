@@ -1,0 +1,36 @@
+{
+  "archivos": {
+    "acta_estado_historial.ndjson.gz": {
+      "bytes": 30907,
+      "rows": 1994,
+      "sha256": "0d32314b2620c56b4feaf760e0c70499e5fe81aa5a48f6a753d16dc7c83a018d"
+    },
+    "actas.ndjson.gz": {
+      "bytes": 83991,
+      "rows": 1163,
+      "sha256": "eaf60f03c9f30da8f11f76477cea5a5ae4b606653cc5c8b5d5c7472f7c6cb231"
+    },
+    "instalaciones.ndjson.gz": {
+      "bytes": 20149,
+      "rows": 788,
+      "sha256": "f14e238c28934f1b29c223621fad562346316856ce763fddc092ed5ff687ceb8"
+    },
+    "pdfs.ndjson.gz": {
+      "bytes": 40376,
+      "rows": 2539,
+      "sha256": "efdbd91991df8641176b0a76ab6b10f50cd8a38024b14ca85da11de71be57860"
+    },
+    "votos.ndjson.gz": {
+      "bytes": 539396,
+      "rows": 43890,
+      "sha256": "41ede55b35d1aa54684a567b62fd7783dd9b4885d646576a6122061dd86cec90"
+    }
+  },
+  "distrito": "VILLA EL SALVADOR",
+  "exported_at": "2026-04-18T17:39:27+00:00",
+  "maquina": "DETI-0013",
+  "operador": "jaaguilar",
+  "schema_version": 2,
+  "slug": "VILLA_EL_SALVADOR",
+  "total_rows": 50374
+}

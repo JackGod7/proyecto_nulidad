@@ -256,9 +256,9 @@ async def fase1_distrito(
         )
         conn.commit()
 
-        # Filtrar actas ya procesadas en v2 (tienen api_response_raw)
+        # Filtrar actas ya procesadas en v2 (tienen api_response_hash)
         ya_v2 = {r[0] for r in conn.execute(
-            "SELECT acta_id FROM actas WHERE ubigeo=? AND api_response_raw IS NOT NULL", (ubigeo,)
+            "SELECT acta_id FROM actas WHERE ubigeo=? AND api_response_hash IS NOT NULL", (ubigeo,)
         ).fetchall()}
         ids_nuevos = [a["id"] for a in pres if a["id"] not in ya_v2]
         logger.info("  %s: %d nuevas (skip %d v2)", nombre, len(ids_nuevos), len(pres) - len(ids_nuevos))
@@ -297,11 +297,11 @@ async def fase1_distrito(
                              solucion_tecnologica,
                              total_electores, total_votantes, votos_emitidos, votos_validos,
                              participacion_pct,
-                             votos_todos_json, votos_blanco, votos_nulos, votos_impugnados,
+                             votos_blanco, votos_nulos, votos_impugnados,
                              tiene_pdf_escrutinio, tiene_pdf_instalacion, tiene_pdf_sufragio,
-                             api_response_raw, api_response_hash,
+                             api_response_hash,
                              tiene_datos, captura_version, operador, maquina, capturado_at)
-                            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,datetime('now'))
+                            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,datetime('now'))
                         """, (
                             acta_id, fila["mesa"], ubigeo, nombre,
                             fila["departamento"], fila["provincia"],
@@ -313,13 +313,38 @@ async def fase1_distrito(
                             fila["total_electores"], fila["total_votantes"],
                             fila["votos_emitidos"], fila["votos_validos"],
                             fila["participacion_pct"],
-                            fila["votos_todos_json"], fila["votos_blanco"],
+                            fila["votos_blanco"],
                             fila["votos_nulos"], fila["votos_impugnados"],
                             fila["tiene_pdf_escrutinio"], fila["tiene_pdf_instalacion"],
                             fila["tiene_pdf_sufragio"],
-                            fila["api_response_raw"], fila["api_response_hash"],
+                            fila["api_response_hash"],
                             fila["tiene_datos"], "2.0.0", fila["operador"], fila["maquina"],
                         ))
+
+                        # Normalizar lineaTiempo -> acta_estado_historial
+                        for item in fila.get("linea_tiempo", []):
+                            ts = item.get("fechaRegistro")
+                            iso = None
+                            if ts:
+                                try:
+                                    from datetime import datetime, timezone
+                                    iso = datetime.fromtimestamp(ts/1000, tz=timezone.utc).isoformat()
+                                except Exception:
+                                    pass
+                            conn.execute("""
+                                INSERT INTO acta_estado_historial
+                                (acta_id, codigo_estado, descripcion_estado,
+                                 descripcion_resolucion, fecha_registro_ms,
+                                 fecha_registro_iso)
+                                VALUES (?,?,?,?,?,?)
+                            """, (
+                                acta_id,
+                                item.get("codigoEstadoActa"),
+                                item.get("descripcionEstadoActa"),
+                                item.get("descripcionEstadoActaResolucion"),
+                                ts,
+                                iso,
+                            ))
 
                         # Votos normalizados (ALL partidos)
                         acta_data = api_response.get("data", api_response)

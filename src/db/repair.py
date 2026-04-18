@@ -166,11 +166,13 @@ def verify_integrity(conn: sqlite3.Connection) -> dict:
         except sqlite3.OperationalError:
             pass
 
-    # Votos coverage
+    # Votos coverage (via tabla normalizada votos_por_mesa)
     rows = conn.execute("""
-        SELECT distrito, COUNT(*) as total,
-               SUM(CASE WHEN votos_todos_json IS NOT NULL THEN 1 ELSE 0 END) as con_votos
-        FROM actas GROUP BY distrito ORDER BY distrito
+        SELECT a.distrito, COUNT(DISTINCT a.acta_id) as total,
+               COUNT(DISTINCT v.acta_id) as con_votos
+        FROM actas a
+        LEFT JOIN votos_por_mesa v ON v.acta_id = a.acta_id
+        GROUP BY a.distrito ORDER BY a.distrito
     """).fetchall()
     result["votos_coverage"] = {d: f"{v}/{t}" for d, t, v in rows}
 

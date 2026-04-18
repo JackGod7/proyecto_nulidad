@@ -1,0 +1,21 @@
+{
+  "archivos": {
+    "actas.ndjson.gz": {
+      "bytes": 40482,
+      "rows": 1493,
+      "sha256": "38aaf2cce0f51da69c953de458d5c681d155ffb964c9b53f23480b2852ee9cb9"
+    },
+    "pdfs.ndjson.gz": {
+      "bytes": 56972,
+      "rows": 3815,
+      "sha256": "9c68d48f9a555c6f0f743db0b318efa1fd79fb6cbcd7c0297b36fa8ea54c04a7"
+    }
+  },
+  "distrito": "COMAS",
+  "exported_at": "2026-04-18T17:39:14+00:00",
+  "maquina": "DETI-0013",
+  "operador": "jaaguilar",
+  "schema_version": 2,
+  "slug": "COMAS",
+  "total_rows": 5308
+}

@@ -1,0 +1,21 @@
+{
+  "archivos": {
+    "actas.ndjson.gz": {
+      "bytes": 27825,
+      "rows": 1030,
+      "sha256": "6188d3127ab4315022e994402aad2a0114951c782364050089d3b76945487432"
+    },
+    "pdfs.ndjson.gz": {
+      "bytes": 38444,
+      "rows": 2569,
+      "sha256": "43d5ab176006279a31476c95b6a4599f5400764a5cb96843e370d8a449ff7c31"
+    }
+  },
+  "distrito": "LIMA",
+  "exported_at": "2026-04-18T17:39:17+00:00",
+  "maquina": "DETI-0013",
+  "operador": "jaaguilar",
+  "schema_version": 2,
+  "slug": "LIMA",
+  "total_rows": 3599
+}

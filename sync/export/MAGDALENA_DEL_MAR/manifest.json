@@ -1,0 +1,36 @@
+{
+  "archivos": {
+    "acta_estado_historial.ndjson.gz": {
+      "bytes": 3895,
+      "rows": 218,
+      "sha256": "7f92f6d92debb17c45ee7e683d40c6f420c15ebda1973fafc63b80b99beb75d8"
+    },
+    "actas.ndjson.gz": {
+      "bytes": 18799,
+      "rows": 255,
+      "sha256": "3bd0c446102afe258202db38442b770c017a67c72f21aaaf90ee6daf65d6507f"
+    },
+    "instalaciones.ndjson.gz": {
+      "bytes": 4809,
+      "rows": 152,
+      "sha256": "616f83fa51110bd28ea4e84e61bb9a9f87aab5c25345d24d7d29ba5cbee3dad1"
+    },
+    "pdfs.ndjson.gz": {
+      "bytes": 32508,
+      "rows": 472,
+      "sha256": "026da00c73f97ecbeeebc7afd2c35380fdaad981adf204d184237d0b6ec02101"
+    },
+    "votos.ndjson.gz": {
+      "bytes": 96725,
+      "rows": 7220,
+      "sha256": "b83400b77269b42abf656cfc55c2add7397989362d0955b6298190d939941586"
+    }
+  },
+  "distrito": "MAGDALENA DEL MAR",
+  "exported_at": "2026-04-18T17:39:18+00:00",
+  "maquina": "DETI-0013",
+  "operador": "jaaguilar",
+  "schema_version": 2,
+  "slug": "MAGDALENA_DEL_MAR",
+  "total_rows": 8317
+}

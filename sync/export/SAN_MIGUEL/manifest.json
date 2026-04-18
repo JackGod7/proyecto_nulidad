@@ -1,0 +1,31 @@
+{
+  "archivos": {
+    "acta_estado_historial.ndjson.gz": {
+      "bytes": 11915,
+      "rows": 764,
+      "sha256": "3e41cc6e1494e6b11291f3122ae07c5b8d4eee6d2231a42a0f13356b99e96f13"
+    },
+    "actas.ndjson.gz": {
+      "bytes": 36921,
+      "rows": 504,
+      "sha256": "6dde6aeecdec6b60918eae976f4c184488100a9939663f265c2243f1bbd871fd"
+    },
+    "pdfs.ndjson.gz": {
+      "bytes": 19521,
+      "rows": 1217,
+      "sha256": "f4d1cd6a3c38ddda5b2da2009d53ebcc146fb449e0011b1b4723706e60b85566"
+    },
+    "votos.ndjson.gz": {
+      "bytes": 253276,
+      "rows": 19076,
+      "sha256": "5c13ab802e36a2e5ace80e8fa38ed01c7b9de58a76b30c37c864fe643a7072e7"
+    }
+  },
+  "distrito": "SAN MIGUEL",
+  "exported_at": "2026-04-18T17:39:24+00:00",
+  "maquina": "DETI-0013",
+  "operador": "jaaguilar",
+  "schema_version": 2,
+  "slug": "SAN_MIGUEL",
+  "total_rows": 21561
+}

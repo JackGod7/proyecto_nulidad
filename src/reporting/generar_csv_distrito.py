@@ -88,13 +88,22 @@ def generar_csv_distrito(distrito: str) -> Path | None:
         conn.close()
         return None
 
-    # Actas + votos
+    # Actas (votos leidos desde votos_por_mesa)
     actas = conn.execute(
-        "SELECT mesa, local_votacion, estado_acta, total_electores, total_votantes, "
-        "votos_todos_json FROM actas WHERE distrito=?",
+        "SELECT acta_id, mesa, local_votacion, estado_acta, total_electores, "
+        "total_votantes FROM actas WHERE distrito=?",
         (distrito_db,)
     ).fetchall()
     actas_map = {r["mesa"]: dict(r) for r in actas}
+
+    votos_por_acta: dict[int, dict[str, int]] = {}
+    for v in conn.execute(
+        "SELECT acta_id, partido_nombre, votos FROM votos_por_mesa "
+        "WHERE fuente='api' AND acta_id IN ("
+        "  SELECT acta_id FROM actas WHERE distrito=?)",
+        (distrito_db,)
+    ).fetchall():
+        votos_por_acta.setdefault(v["acta_id"], {})[v["partido_nombre"]] = v["votos"] or 0
 
     rows = []
     for r in inst:
@@ -108,25 +117,14 @@ def generar_csv_distrito(distrito: str) -> Path | None:
         ausentes = electores - votantes if electores else 0
         aus_pct = round(ausentes / electores * 100, 2) if electores else 0
 
-        # Votos por partido (soporta dict y list)
+        # Votos por partido (leidos de tabla normalizada)
         votos_partido = {c: 0 for c in PARTIDOS_COLS}
-        votos_json = acta.get("votos_todos_json")
-        if votos_json:
-            try:
-                vj = json.loads(votos_json) if isinstance(votos_json, str) else votos_json
-                if isinstance(vj, dict):
-                    for partido, votos_val in vj.items():
-                        col = PARTIDOS_MAP_DICT.get(partido)
-                        if col:
-                            votos_partido[col] = int(votos_val) if votos_val else 0
-                elif isinstance(vj, list):
-                    for v in vj:
-                        nombre = v.get("strNombreElector", "")
-                        col = PARTIDOS_MAP_LIST.get(nombre)
-                        if col:
-                            votos_partido[col] = v.get("intVotos", 0)
-            except (json.JSONDecodeError, TypeError, ValueError):
-                pass
+        acta_id = acta.get("acta_id")
+        votos_acta = votos_por_acta.get(acta_id, {})
+        for partido, votos_val in votos_acta.items():
+            col = PARTIDOS_MAP_DICT.get(partido)
+            if col:
+                votos_partido[col] = int(votos_val) if votos_val else 0
 
         rows.append({
             "mesa": str(mesa).zfill(6),

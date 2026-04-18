@@ -1,0 +1,31 @@
+{
+  "archivos": {
+    "acta_estado_historial.ndjson.gz": {
+      "bytes": 4982,
+      "rows": 318,
+      "sha256": "07aaa53a95abccae963dd9d4d1f476e4978d8aca47b9c2e3880fb2e1d9b6993e"
+    },
+    "actas.ndjson.gz": {
+      "bytes": 8086,
+      "rows": 103,
+      "sha256": "4aa194589e6bbae3ceaf1271e927aee54e01951bf37d61ba252dc75441d58da1"
+    },
+    "pdfs.ndjson.gz": {
+      "bytes": 1292,
+      "rows": 14,
+      "sha256": "7474ed640ea4d84554fc9d1ef9e58da69d3b3693ad3a8e4a076ffabaa069762f"
+    },
+    "votos.ndjson.gz": {
+      "bytes": 32791,
+      "rows": 3724,
+      "sha256": "e6d92df7a8061d8bea1512cd94b649514e93486c6a2b6231d8876d8a670b6089"
+    }
+  },
+  "distrito": "CIENEGUILLA",
+  "exported_at": "2026-04-18T17:39:14+00:00",
+  "maquina": "DETI-0013",
+  "operador": "jaaguilar",
+  "schema_version": 2,
+  "slug": "CIENEGUILLA",
+  "total_rows": 4159
+}

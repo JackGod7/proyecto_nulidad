@@ -1,0 +1,21 @@
+{
+  "archivos": {
+    "actas.ndjson.gz": {
+      "bytes": 16563,
+      "rows": 630,
+      "sha256": "5666fdf6d268cef69980b2ecbddba40bc99e6bb9f0868f06cb7925e5a63ffcf2"
+    },
+    "pdfs.ndjson.gz": {
+      "bytes": 27301,
+      "rows": 1766,
+      "sha256": "aab55966209d7c657ebd4a1ad7a92500c0cf58f4ffbb3eb4ea7924f442e89491"
+    }
+  },
+  "distrito": "SANTA ANITA",
+  "exported_at": "2026-04-18T17:39:25+00:00",
+  "maquina": "DETI-0013",
+  "operador": "jaaguilar",
+  "schema_version": 2,
+  "slug": "SANTA_ANITA",
+  "total_rows": 2396
+}

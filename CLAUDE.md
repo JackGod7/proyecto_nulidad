@@ -68,12 +68,37 @@ Base: `https://resultadoelectoral.onpe.gob.pe/presentacion-backend`
 | `actas/file?id={archivoId}` | URL firmada S3 para PDF |
 
 ## Schema Forense (forensic.db)
-- **actas**: ALL campos API + raw JSON + SHA-256 hash + trazabilidad
+- **actas**: ALL campos API + SHA-256 hash (raw JSON NO se guarda — ya normalizado)
 - **votos_por_mesa**: votos normalizados ALL partidos, fuente (api/pdf)
 - **pdfs**: SHA-256 hash, estado disco, datos Gemini AI
+- **instalaciones**: hora apertura + metadata (sin gemini_raw, normalizado)
+- **acta_estado_historial**: lineaTiempo normalizada (ex api_response_raw)
 - **snapshots**: tracking temporal (detectar cambios ONPE)
 - **discrepancias**: API vs PDF cross-validation
 - **cadena_custodia**: log completo de toda acción
+
+## Forensic v2 — Sync por distrito (NDJSON+gzip+manifest)
+
+Cada distrito exporta a `sync/export/{SLUG}/`:
+- `actas.ndjson.gz` · `votos.ndjson.gz` · `pdfs.ndjson.gz` · `instalaciones.ndjson.gz` · `acta_estado_historial.ndjson.gz`
+- `manifest.json` → SHA-256 de cada archivo + rows + operador + fecha
+
+Comandos:
+```bash
+uv run python -m src.sync.exporter_v2 "DISTRITO"     # exportar
+uv run python -m src.sync.verifier                   # verificar todos
+uv run python -m src.sync.verifier --changed         # solo modificados en git
+```
+
+Pre-commit hook (`scripts/install_hooks.sh`) bloquea commit si manifest no verifica.
+
+## Branches por distrito (Forensic v2)
+
+1 operador = 1 branch `distrito/<slug>` activa.
+- `distrito/vmt`, `distrito/chorrillos`, `distrito/sjm`, etc.
+- Cada commit va a la branch del distrito
+- PR a `main` solo cuando distrito queda COMPLETO (gap=0)
+- Branches viejas `maquina-1..6` → archivadas
 
 ## Convenciones
 - RTK para TODOS los comandos bash

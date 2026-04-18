@@ -1,0 +1,21 @@
+{
+  "archivos": {
+    "actas.ndjson.gz": {
+      "bytes": 48352,
+      "rows": 1798,
+      "sha256": "4c538eaf40ec2a8556fe0f3f83f8de487f73938fa72d64220d783d56a7dbecdb"
+    },
+    "pdfs.ndjson.gz": {
+      "bytes": 71820,
+      "rows": 4713,
+      "sha256": "fdc104128c193c7c298425279c2dac757c66e8197d4b7a6ad296e12412786aa2"
+    }
+  },
+  "distrito": "SAN MARTÍN DE PORRES",
+  "exported_at": "2026-04-18T17:39:24+00:00",
+  "maquina": "DETI-0013",
+  "operador": "jaaguilar",
+  "schema_version": 2,
+  "slug": "SAN_MARTIN_DE_PORRES",
+  "total_rows": 6511
+}

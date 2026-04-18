@@ -1,0 +1,8 @@
+{
+  "_comment": "Maquina Lynn - Cono Sur: SJM + VES (~1100 actas)",
+  "machine_id": "MAQUINA_LYNN",
+  "owner": "Lynn",
+  "distritos": ["SAN JUAN DE MIRAFLORES", "VILLA EL SALVADOR"],
+  "rol": "worker",
+  "fase_actual": "scraping"
+}

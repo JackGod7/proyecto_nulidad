@@ -1,0 +1,36 @@
+{
+  "archivos": {
+    "acta_estado_historial.ndjson.gz": {
+      "bytes": 1026,
+      "rows": 48,
+      "sha256": "fb1914c61b6b088662b84df8a09de4a91206d51aa75c5493a932323b074d467f"
+    },
+    "actas.ndjson.gz": {
+      "bytes": 3958,
+      "rows": 44,
+      "sha256": "fd38c3c9b09423f2b93ecd01ea1a607b63b0725871331547c692ba373f7e6b23"
+    },
+    "instalaciones.ndjson.gz": {
+      "bytes": 1481,
+      "rows": 40,
+      "sha256": "21744295aecc747978d3cf4ec15fe5390676afb1d398afc6027d08bce0e8445b"
+    },
+    "pdfs.ndjson.gz": {
+      "bytes": 7904,
+      "rows": 120,
+      "sha256": "672c9442f3dada0ea6cdb216b4062b1c29ccc4af0d6728a6765cfe5d2f125293"
+    },
+    "votos.ndjson.gz": {
+      "bytes": 15228,
+      "rows": 1672,
+      "sha256": "5bced41d701778b4e6b9345e878d67b4e65341604952bda7ee1ba68d16ce0fa2"
+    }
+  },
+  "distrito": "PUCUSANA",
+  "exported_at": "2026-04-18T17:39:20+00:00",
+  "maquina": "DETI-0013",
+  "operador": "jaaguilar",
+  "schema_version": 2,
+  "slug": "PUCUSANA",
+  "total_rows": 1924
+}

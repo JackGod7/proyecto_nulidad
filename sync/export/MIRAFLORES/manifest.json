@@ -1,0 +1,36 @@
+{
+  "archivos": {
+    "acta_estado_historial.ndjson.gz": {
+      "bytes": 9513,
+      "rows": 609,
+      "sha256": "3e4420900012f3a83ebdefb8fba216cadc93d03bfeb1a1436dca58bcd7cfe971"
+    },
+    "actas.ndjson.gz": {
+      "bytes": 35127,
+      "rows": 480,
+      "sha256": "81053c0c43c64f58b2542e599b433a0b5c51d7a073b77acd9b93177d02106831"
+    },
+    "instalaciones.ndjson.gz": {
+      "bytes": 12140,
+      "rows": 418,
+      "sha256": "979de4a4a18afdc5bbb7557f72467ae4fc9a99f3dda26a2a43cd355324091e82"
+    },
+    "pdfs.ndjson.gz": {
+      "bytes": 84013,
+      "rows": 1293,
+      "sha256": "4120d9ab4a0dd8f3349c3dd4cc189908b0e60770317f364b2e95feeb791c008b"
+    },
+    "votos.ndjson.gz": {
+      "bytes": 155858,
+      "rows": 18202,
+      "sha256": "3a74ea352b43d569685a9a918988e11b43223ecd659716f730f73a00c757e031"
+    }
+  },
+  "distrito": "MIRAFLORES",
+  "exported_at": "2026-04-18T17:39:19+00:00",
+  "maquina": "DETI-0013",
+  "operador": "jaaguilar",
+  "schema_version": 2,
+  "slug": "MIRAFLORES",
+  "total_rows": 21002
+}

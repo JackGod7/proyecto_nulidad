@@ -1,0 +1,21 @@
+{
+  "archivos": {
+    "actas.ndjson.gz": {
+      "bytes": 22686,
+      "rows": 855,
+      "sha256": "b12e318e941567367e5b81874aae5272462fe56f88de7b91bf4009d70b8bf4ce"
+    },
+    "pdfs.ndjson.gz": {
+      "bytes": 34117,
+      "rows": 2222,
+      "sha256": "5d9f2af47cdee0c0b27d806a16a6b0a328853d47639b083fe4e778dd09f9661b"
+    }
+  },
+  "distrito": "CARABAYLLO",
+  "exported_at": "2026-04-18T17:39:14+00:00",
+  "maquina": "DETI-0013",
+  "operador": "jaaguilar",
+  "schema_version": 2,
+  "slug": "CARABAYLLO",
+  "total_rows": 3077
+}

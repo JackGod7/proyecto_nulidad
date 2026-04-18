@@ -169,16 +169,14 @@ async def monitorear_distrito(page, ubigeo: str, nombre: str) -> dict:
     pres = [a for a in actas if a.get("idEleccion") == ID_ELECCION]
     logger.info("[MONITOR] %s: %d presidenciales", nombre, len(pres))
 
-    # Cargar hashes anteriores
+    # Cargar hashes anteriores (raw ya no se guarda; diff por hash)
     prev_hashes = {}
     for r in conn.execute(
-        "SELECT acta_id, api_response_hash, api_response_raw FROM actas WHERE ubigeo=? AND api_response_raw IS NOT NULL",
+        "SELECT acta_id, api_response_hash FROM actas "
+        "WHERE ubigeo=? AND api_response_hash IS NOT NULL",
         (ubigeo,)
     ).fetchall():
-        prev_hashes[r["acta_id"]] = {
-            "hash": r["api_response_hash"],
-            "raw": r["api_response_raw"],
-        }
+        prev_hashes[r["acta_id"]] = {"hash": r["api_response_hash"]}
 
     # Fetch detalles en batches
     ids = [a["id"] for a in pres]
@@ -201,13 +199,10 @@ async def monitorear_distrito(page, ubigeo: str, nombre: str) -> dict:
             if acta_id in prev_hashes:
                 old_hash = prev_hashes[acta_id]["hash"]
                 if old_hash != new_hash:
-                    # CAMBIO DETECTADO
+                    # CAMBIO DETECTADO (diff a alto nivel; raw ya no se guarda)
                     total_cambios += 1
-                    old_data = json.loads(prev_hashes[acta_id]["raw"])
-                    if isinstance(old_data, dict) and "data" in old_data:
-                        old_data = old_data["data"]
-
-                    diffs = _diff_acta(old_data, acta_data)
+                    diffs = [{"campo": "api_response_hash",
+                              "antes": old_hash, "despues": new_hash}]
                     mesa = acta_data.get("codigoMesa", "?")
 
                     logger.warning(
@@ -229,17 +224,17 @@ async def monitorear_distrito(page, ubigeo: str, nombre: str) -> dict:
                         json.dumps(diffs, ensure_ascii=False),
                     ))
 
-                    # Actualizar acta con nuevos datos
+                    # Actualizar acta con nuevos datos (solo hash + campos escalares)
                     conn.execute("""
                         UPDATE actas SET
-                            api_response_raw=?, api_response_hash=?,
+                            api_response_hash=?,
                             estado_acta=?, codigo_estado_acta=?,
                             total_electores=?, total_votantes=?,
                             votos_emitidos=?, votos_validos=?,
                             participacion_pct=?, capturado_at=?
                         WHERE acta_id=?
                     """, (
-                        json.dumps(r["data"], ensure_ascii=False), new_hash,
+                        new_hash,
                         acta_data.get("descripcionEstadoActa"),
                         acta_data.get("codigoEstadoActa"),
                         acta_data.get("totalElectoresHabiles"),

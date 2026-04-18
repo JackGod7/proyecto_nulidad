@@ -1,0 +1,21 @@
+{
+  "archivos": {
+    "actas.ndjson.gz": {
+      "bytes": 1261,
+      "rows": 24,
+      "sha256": "957e56b25a272d5339936aed3b746e3dbd10a17f20f2cf4057fbe6423422e6d3"
+    },
+    "pdfs.ndjson.gz": {
+      "bytes": 906,
+      "rows": 34,
+      "sha256": "d60a7396051750b3fd10c76cbd63f20fe7f512824bfc2fdaca6ff8a955686a6c"
+    }
+  },
+  "distrito": "SAN BARTOLO",
+  "exported_at": "2026-04-18T17:39:21+00:00",
+  "maquina": "DETI-0013",
+  "operador": "jaaguilar",
+  "schema_version": 2,
+  "slug": "SAN_BARTOLO",
+  "total_rows": 58
+}

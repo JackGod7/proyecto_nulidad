@@ -1,0 +1,21 @@
+{
+  "archivos": {
+    "actas.ndjson.gz": {
+      "bytes": 2446,
+      "rows": 67,
+      "sha256": "8c33ffbe3146e85da98b9286ad2623c9fbe47cdafdcd124b4f24347917f89561"
+    },
+    "pdfs.ndjson.gz": {
+      "bytes": 3034,
+      "rows": 170,
+      "sha256": "96df79d09f0b5f965dc8f2c9c6606f25104ffe1b4b16289d038466b5a9e509ae"
+    }
+  },
+  "distrito": "SANTA ROSA",
+  "exported_at": "2026-04-18T17:39:25+00:00",
+  "maquina": "DETI-0013",
+  "operador": "jaaguilar",
+  "schema_version": 2,
+  "slug": "SANTA_ROSA",
+  "total_rows": 237
+}

@@ -1,0 +1,21 @@
+{
+  "archivos": {
+    "actas.ndjson.gz": {
+      "bytes": 4883,
+      "rows": 164,
+      "sha256": "a3bf631cca27edb919057a61fe471576e0c2d38c215ef2e21fd369e4df62a27c"
+    },
+    "pdfs.ndjson.gz": {
+      "bytes": 5443,
+      "rows": 332,
+      "sha256": "ab16743fbcb01cad3c7dec4de35ec207eb7af63cdd81956c33f45f7c547e4c0b"
+    }
+  },
+  "distrito": "ANCÓN",
+  "exported_at": "2026-04-18T17:39:13+00:00",
+  "maquina": "DETI-0013",
+  "operador": "jaaguilar",
+  "schema_version": 2,
+  "slug": "ANCON",
+  "total_rows": 496
+}

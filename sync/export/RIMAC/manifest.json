@@ -1,0 +1,21 @@
+{
+  "archivos": {
+    "actas.ndjson.gz": {
+      "bytes": 15647,
+      "rows": 567,
+      "sha256": "67a5d201a0228b679207af4badf5bfdd01a0aa8a74e65cb08fe0fd6f62b26546"
+    },
+    "pdfs.ndjson.gz": {
+      "bytes": 21811,
+      "rows": 1444,
+      "sha256": "fd37f9931d98b4e4d47c1ec619997356cfaffe1201e3cdf86f5b4c3182b69dc4"
+    }
+  },
+  "distrito": "RÍMAC",
+  "exported_at": "2026-04-18T17:39:21+00:00",
+  "maquina": "DETI-0013",
+  "operador": "jaaguilar",
+  "schema_version": 2,
+  "slug": "RIMAC",
+  "total_rows": 2011
+}

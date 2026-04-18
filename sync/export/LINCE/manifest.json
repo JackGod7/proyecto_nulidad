@@ -1,0 +1,31 @@
+{
+  "archivos": {
+    "acta_estado_historial.ndjson.gz": {
+      "bytes": 5235,
+      "rows": 325,
+      "sha256": "a4b283f2eb84b5ddde1e236a992786c96c6dc54dff7ee5e242e5627e48642519"
+    },
+    "actas.ndjson.gz": {
+      "bytes": 21551,
+      "rows": 294,
+      "sha256": "a5d5d6fcc8cfe60a5af174f01a92baa17c67e3c64a73501428d81aeef661dd7a"
+    },
+    "pdfs.ndjson.gz": {
+      "bytes": 12674,
+      "rows": 828,
+      "sha256": "f0a73ae6388129a8282d65f1f55d1276091321b962bdf6ff7d05bc08126da7c6"
+    },
+    "votos.ndjson.gz": {
+      "bytes": 122646,
+      "rows": 11134,
+      "sha256": "09ab8fe27ecc439cb243e61c3919aa8997ab51837c8233156fef7b26afc5d590"
+    }
+  },
+  "distrito": "LINCE",
+  "exported_at": "2026-04-18T17:39:17+00:00",
+  "maquina": "DETI-0013",
+  "operador": "jaaguilar",
+  "schema_version": 2,
+  "slug": "LINCE",
+  "total_rows": 12581
+}

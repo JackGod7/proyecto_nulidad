@@ -80,8 +80,7 @@ def init_forensic_db() -> sqlite3.Connection:
             votos_validos INTEGER,
             participacion_pct REAL,
 
-            -- Votos ALL partidos
-            votos_todos_json TEXT,
+            -- Totales blanco/nulos/impugnados (detalle por partido en votos_por_mesa)
             votos_blanco INTEGER,
             votos_nulos INTEGER,
             votos_impugnados INTEGER,
@@ -95,8 +94,7 @@ def init_forensic_db() -> sqlite3.Connection:
             flag_sin_acta INTEGER DEFAULT 0,
             actas_faltantes INTEGER DEFAULT 0,
 
-            -- Raw API (evidencia legal)
-            api_response_raw TEXT,
+            -- Integridad (hash SHA-256 del payload API crudo; raw NO se guarda)
             api_response_hash TEXT,
 
             -- Trazabilidad
@@ -403,7 +401,7 @@ def poblar_auditoria() -> dict:
                total_electores, total_votantes, votos_emitidos, votos_validos,
                participacion_pct, votos_blanco, votos_nulos, votos_impugnados,
                tiene_pdf_escrutinio, tiene_pdf_instalacion, tiene_pdf_sufragio,
-               api_response_hash, api_response_raw, capturado_at
+               api_response_hash, capturado_at
         FROM actas WHERE tiene_datos=1
     """).fetchall()
 
@@ -512,7 +510,7 @@ def poblar_auditoria() -> dict:
             flag_hora, flag_ausentismo, flag_sin_pdf, flag_jee,
             flag_obs, flag_nulos, flag_error, flag_cambio,
             total_flags, a["api_response_hash"],
-            1 if a["api_response_raw"] else 0,
+            1 if a["api_response_hash"] else 0,
             a["capturado_at"], now,
         ))
         count += 1
