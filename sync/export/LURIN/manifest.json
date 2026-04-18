@@ -1,31 +1,26 @@
 {
   "archivos": {
-    "acta_estado_historial.ndjson.gz": {
-      "bytes": 8361,
-      "rows": 537,
-      "sha256": "22aad0813b09bca3f20de00813214dfe17c5771e584891203033f767ddd0bcde"
-    },
     "actas.ndjson.gz": {
-      "bytes": 18172,
+      "bytes": 192781,
       "rows": 247,
-      "sha256": "8892a9aca63f87edc9b682107653e19d454096fbc798745425a556acad11c3e4"
+      "sha256": "0ae66d2d5f75b9a0f7680be017921b19d09b837ecbf40a7ebb3d152babcb4cc9"
     },
     "pdfs.ndjson.gz": {
-      "bytes": 12151,
+      "bytes": 11604,
       "rows": 174,
-      "sha256": "030d6168337fd77e3d0d7a29508247878945a6e7ea03b6750a2d3cb91a86aa3e"
+      "sha256": "f221e3d6165350eaa00e599d934ffb423bbe8dc75dc7880f8f571f9d0e686da2"
     },
     "votos.ndjson.gz": {
-      "bytes": 64616,
+      "bytes": 97409,
       "rows": 7448,
-      "sha256": "8bb5c36f7b61bb736a3d6a5b5a05d48151f28bbc368474109aabb6864dd10c80"
+      "sha256": "f9c748eaed159cc8fe3cf179901f56d85813ce79dd55005bb64cbafc7f299292"
     }
   },
   "distrito": "LURÍN",
-  "exported_at": "2026-04-18T17:39:18+00:00",
-  "maquina": "DETI-0013",
-  "operador": "jaaguilar",
+  "exported_at": "2026-04-18T21:37:48+00:00",
+  "maquina": "DESKTOP-F1KBH34",
+  "operador": "jimvi",
   "schema_version": 2,
   "slug": "LURIN",
-  "total_rows": 8406
+  "total_rows": 7869
 }
