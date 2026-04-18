@@ -31,7 +31,7 @@ def merge_file(conn: sqlite3.Connection, path: Path) -> dict[str, int]:
             placeholders = ", ".join("?" * len(row))
             try:
                 cur.execute(
-                    f"INSERT OR IGNORE INTO {table_name} ({cols}) VALUES ({placeholders})",
+                    f"INSERT OR REPLACE INTO {table_name} ({cols}) VALUES ({placeholders})",
                     list(row.values())
                 )
                 if cur.rowcount:

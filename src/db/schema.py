@@ -91,6 +91,10 @@ def init_forensic_db() -> sqlite3.Connection:
             tiene_pdf_instalacion INTEGER DEFAULT 0,
             tiene_pdf_sufragio INTEGER DEFAULT 0,
 
+            -- Acta presidencial (flag: votos publicados sin acta escrutinio)
+            flag_sin_acta INTEGER DEFAULT 0,
+            actas_faltantes INTEGER DEFAULT 0,
+
             -- Raw API (evidencia legal)
             api_response_raw TEXT,
             api_response_hash TEXT,
@@ -328,6 +332,11 @@ def init_forensic_db() -> sqlite3.Connection:
             flags_jee INTEGER DEFAULT 0,
             flags_nulos_alto INTEGER DEFAULT 0,
             flags_error_aritmetico INTEGER DEFAULT 0,
+
+            -- Actas presidenciales faltantes
+            mesas_sin_acta INTEGER DEFAULT 0,
+            actas_faltantes INTEGER DEFAULT 0,
+            votos_sin_acta INTEGER DEFAULT 0,
 
             snapshots_count INTEGER DEFAULT 0,
             cambios_detectados INTEGER DEFAULT 0,
@@ -663,6 +672,64 @@ def migrate_v1_to_v2() -> None:
 
     v1.close()
     v2.close()
+
+
+def poblar_actas_faltantes() -> dict:
+    """Puebla flag_sin_acta en actas (votos publicados sin acta escrutinio presidencial)."""
+    conn = get_conn()
+
+    # Migrar columnas si no existen
+    for col in ["flag_sin_acta", "actas_faltantes"]:
+        try:
+            conn.execute(f"ALTER TABLE actas ADD COLUMN {col} INTEGER DEFAULT 0")
+        except sqlite3.OperationalError:
+            pass
+    for col in ["mesas_sin_acta", "actas_faltantes", "votos_sin_acta"]:
+        try:
+            conn.execute(f"ALTER TABLE auditoria_distrito ADD COLUMN {col} INTEGER DEFAULT 0")
+        except sqlite3.OperationalError:
+            pass
+
+    # Flag: votos publicados sin acta de escrutinio presidencial
+    conn.execute("""
+        UPDATE actas SET
+            flag_sin_acta = CASE
+                WHEN total_votantes > 0 AND tiene_pdf_escrutinio = 0 THEN 1 ELSE 0
+            END,
+            actas_faltantes = CASE
+                WHEN total_votantes > 0 AND tiene_pdf_escrutinio = 0 THEN 1 ELSE 0
+            END
+    """)
+    conn.commit()
+
+    updated = conn.execute("SELECT SUM(flag_sin_acta) FROM actas").fetchone()
+    mesas_sin = updated[0] or 0
+
+    # Resumen por distrito
+    rows = conn.execute("""
+        SELECT distrito,
+               SUM(flag_sin_acta) as mesas,
+               SUM(actas_faltantes) as actas,
+               COALESCE(SUM(CASE WHEN flag_sin_acta=1 THEN total_votantes ELSE 0 END), 0) as votos
+        FROM actas
+        GROUP BY distrito
+    """).fetchall()
+
+    for d, m, a, v in rows:
+        conn.execute("""
+            UPDATE auditoria_distrito SET
+                mesas_sin_acta=?, actas_faltantes=?, votos_sin_acta=?
+            WHERE distrito=?
+        """, (m or 0, a or 0, v or 0, d))
+    conn.commit()
+
+    result = {
+        "mesas_sin_acta_presidencial": mesas_sin,
+    }
+    log_custodia(conn, "ACTAS_FALTANTES_POBLADAS", detalle=result)
+    conn.close()
+    logger.info("Actas faltantes: %s", result)
+    return result
 
 
 if __name__ == "__main__":

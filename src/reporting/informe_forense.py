@@ -356,6 +356,12 @@ def generar_informe_distrito(distrito_key: str, distrito_nombre: str, archivo_cs
     story.append(_linea())
     _seccion_distrito(story, s, datos)
 
+    # === CADENA DE CUSTODIA — mesas sin acta pero con votos ===
+    custodia = _datos_custodia(distrito_nombre)
+    if custodia["sin_escrutinio"] > 0 or custodia["sin_sufragio"] > 0:
+        story.append(PageBreak())
+        _seccion_custodia(story, s, custodia, distrito_nombre)
+
     # === ANOMALIAS (solo si hay mesas madrugada en este distrito) ===
     mad_path = "data/ENTREGA_ESTADISTICO/HALLAZGO_MESAS_MADRUGADA.csv"
     if Path(mad_path).exists():
@@ -458,6 +464,154 @@ def _seccion_distrito(story, s, d):
     t_votos = Table(votos_data, colWidths=[7 * cm, 4 * cm])
     t_votos.setStyle(_tabla_estilo())
     story.append(t_votos)
+
+
+def _resolver_distrito_db(distrito_nombre: str) -> str:
+    """Resuelve nombre exacto del distrito en DB (maneja acentos/case)."""
+    db_path = Path("data/forensic.db")
+    if not db_path.exists():
+        return distrito_nombre
+    conn = sqlite3.connect(str(db_path))
+    # Exacto
+    r = conn.execute("SELECT DISTINCT distrito FROM actas WHERE distrito=?", (distrito_nombre,)).fetchone()
+    if r:
+        conn.close()
+        return r[0]
+    # UPPER
+    r = conn.execute("SELECT DISTINCT distrito FROM actas WHERE UPPER(distrito)=UPPER(?)", (distrito_nombre,)).fetchone()
+    if r:
+        conn.close()
+        return r[0]
+    # LIKE con palabra mas larga
+    palabras = distrito_nombre.replace("_", " ").split()
+    if palabras:
+        keyword = max(palabras, key=len)
+        r = conn.execute("SELECT DISTINCT distrito FROM actas WHERE distrito LIKE ?", (f"%{keyword}%",)).fetchone()
+        if r:
+            conn.close()
+            return r[0]
+    conn.close()
+    return distrito_nombre
+
+
+def _datos_custodia(distrito_nombre: str) -> dict:
+    """Consulta forensic.db para mesas sin acta pero con votos publicados."""
+    db_path = Path("data/forensic.db")
+    if not db_path.exists():
+        return {"total": 0, "sin_escrutinio": 0, "sin_sufragio": 0,
+                "sin_instalacion": 0, "votos_sin_acta": 0, "mesas_ejemplo": []}
+
+    # Resolver nombre exacto con acentos
+    d = _resolver_distrito_db(distrito_nombre)
+
+    conn = sqlite3.connect(str(db_path))
+    cur = conn.cursor()
+
+    cur.execute(
+        "SELECT COUNT(*) FROM actas WHERE distrito=? AND total_votantes > 0",
+        (d,))
+    total = cur.fetchone()[0]
+
+    cur.execute(
+        "SELECT COUNT(*) FROM actas WHERE distrito=? "
+        "AND total_votantes > 0 AND tiene_pdf_escrutinio = 0",
+        (d,))
+    sin_esc = cur.fetchone()[0]
+
+    cur.execute(
+        "SELECT COUNT(*) FROM actas WHERE distrito=? "
+        "AND total_votantes > 0 AND tiene_pdf_sufragio = 0",
+        (d,))
+    sin_suf = cur.fetchone()[0]
+
+    cur.execute(
+        "SELECT COUNT(*) FROM actas WHERE distrito=? "
+        "AND total_votantes > 0 AND tiene_pdf_instalacion = 0",
+        (d,))
+    sin_inst = cur.fetchone()[0]
+
+    cur.execute(
+        "SELECT COALESCE(SUM(total_votantes), 0) FROM actas WHERE distrito=? "
+        "AND total_votantes > 0 AND tiene_pdf_escrutinio = 0",
+        (d,))
+    votos_sin = cur.fetchone()[0]
+
+    cur.execute(
+        "SELECT mesa, total_electores, total_votantes, estado_acta FROM actas "
+        "WHERE distrito=? AND total_votantes > 0 AND tiene_pdf_escrutinio = 0 "
+        "ORDER BY total_votantes DESC LIMIT 5",
+        (d,))
+    ejemplos = [{"mesa": str(r[0]).zfill(6), "electores": r[1],
+                 "votantes": r[2], "estado": r[3]} for r in cur.fetchall()]
+
+    conn.close()
+    return {
+        "total": total, "sin_escrutinio": sin_esc, "sin_sufragio": sin_suf,
+        "sin_instalacion": sin_inst, "votos_sin_acta": votos_sin,
+        "mesas_ejemplo": ejemplos,
+    }
+
+
+def _seccion_custodia(story, s, c: dict, distrito: str):
+    """Seccion de cadena de custodia — mesas sin acta con votos publicados."""
+    story.append(Paragraph("Vulneracion de cadena de custodia", s["h1"]))
+    story.append(_linea())
+
+    pct_sin = round(c["sin_escrutinio"] / c["total"] * 100, 1) if c["total"] else 0
+
+    story.append(Paragraph(
+        f"En {distrito}, se identificaron <b>{c['sin_escrutinio']:,} mesas "
+        f"({pct_sin}%)</b> cuyos votos aparecen publicados en el portal oficial de "
+        f"resultados de la ONPE pero <b>no tienen acta de escrutinio</b> cargada en el sistema. "
+        f"Estas mesas acumulan <b>{c['votos_sin_acta']:,} votos</b> sin respaldo documental.",
+        s["body"]
+    ))
+
+    story.append(Spacer(1, 3 * mm))
+    story.append(Paragraph(
+        "Esto constituye una vulneracion directa de la cadena de custodia electoral: "
+        "no existe documento fisico digitalizado que respalde los resultados publicados. "
+        "La Ley Organica de Elecciones exige que toda mesa cuente con acta de escrutinio "
+        "como documento legal que certifica el conteo de votos.",
+        s["body"]
+    ))
+
+    story.append(Spacer(1, 3 * mm))
+
+    # Tabla resumen
+    custodia_data = [
+        ["Tipo de acta faltante", "Mesas afectadas", "% del distrito"],
+        ["Acta de escrutinio", f"{c['sin_escrutinio']:,}", f"{pct_sin}%"],
+        ["Acta de sufragio",
+         f"{c['sin_sufragio']:,}",
+         f"{round(c['sin_sufragio'] / c['total'] * 100, 1) if c['total'] else 0}%"],
+        ["Acta de instalacion",
+         f"{c['sin_instalacion']:,}",
+         f"{round(c['sin_instalacion'] / c['total'] * 100, 1) if c['total'] else 0}%"],
+    ]
+    t_cust = Table(custodia_data, colWidths=[6 * cm, 4 * cm, 3 * cm])
+    t_cust.setStyle(_tabla_estilo())
+    story.append(t_cust)
+
+    # Ejemplos
+    if c["mesas_ejemplo"]:
+        story.append(Spacer(1, 4 * mm))
+        story.append(Paragraph("Ejemplos: mesas con votos publicados sin acta de escrutinio", s["h3"]))
+        ej_data = [["Mesa", "Electores", "Votantes", "Estado"]]
+        for m in c["mesas_ejemplo"]:
+            ej_data.append([m["mesa"], f"{m['electores']:,}", f"{m['votantes']:,}", m["estado"] or ""])
+        t_ej = Table(ej_data, colWidths=[3 * cm, 3 * cm, 3 * cm, 5 * cm])
+        t_ej.setStyle(_tabla_estilo())
+        story.append(t_ej)
+
+    story.append(Spacer(1, 4 * mm))
+    story.append(Paragraph(
+        "<b>Implicancia legal:</b> Los votos de estas mesas carecen de sustento documental "
+        "verificable. En un proceso de impugnacion, estos resultados no pueden ser "
+        "auditados ni contrastados contra el acta fisica, lo que compromete la "
+        "transparencia y legitimidad del computo en este distrito.",
+        s["body"]
+    ))
 
 
 def _seccion_anomalias(story, s, mad_df, aus_ref: float, distrito: str):
@@ -600,6 +754,10 @@ DISTRITOS = [
      "data/ENTREGA_ESTADISTICO/SAN_ISIDRO/SAN_ISIDRO_horas_y_votos.csv"),
     ("surco", "Santiago de Surco",
      "data/ENTREGA_ESTADISTICO/SANTIAGO_DE_SURCO/SANTIAGO_DE_SURCO_horas_y_votos.csv"),
+    ("ves", "Villa El Salvador",
+     "data/ENTREGA_ESTADISTICO/VILLA_EL_SALVADOR/VILLA_EL_SALVADOR_horas_y_votos.csv"),
+    ("magdalena", "Magdalena del Mar",
+     "data/ENTREGA_ESTADISTICO/MAGDALENA_DEL_MAR/MAGDALENA_DEL_MAR_horas_y_votos.csv"),
 ]
 
 
