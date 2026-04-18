@@ -312,11 +312,10 @@ def indice_pieza_probatoria_pdf(distrito: str, expediente_dir: Path) -> None:
     ))
     elems.append(Spacer(1, 1 * cm))
 
-    elems.append(Paragraph("_" * 50, styles["Normal"]))
     elems.append(Paragraph(
-        "Perito en Ingenieria de Datos<br/>"
-        "Ingeniero de Datos (CIP en tramite)",
-        styles["Normal"],
+        f"Documento confidencial. Referencia: {distrito} - "
+        f"{datetime.utcnow().strftime('%Y-%m-%d')}.",
+        styles["Italic"],
     ))
 
     doc.build(elems)

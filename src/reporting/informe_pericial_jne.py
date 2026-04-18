@@ -1,24 +1,21 @@
-"""Informe Tecnico de Datos Estadisticos (insumo para peritaje JNE).
+"""Informe Tecnico de Analisis de Datos Electorales (CONFIDENCIAL).
 
-Enfoque: ingenieria de datos y estadistica aplicada. NO pretende sustituir
-al perito forense/legal ni al abogado. Entrega datos procesados, estadisticas
-y sugerencias de interpretacion basadas en datos (no en supuestos) para que
-el perito oficial y el abogado las evaluen.
+Documento tecnico de analisis estadistico sobre datos oficiales ONPE.
+Entrega datos procesados, estadisticas descriptivas e inferenciales,
+y observaciones basadas en datos (no supuestos).
 
 Estructura:
-  I.    Identificacion del equipo tecnico (ingenieria de datos)
-  II.   Objeto del informe (que entregamos, que NO)
-  III.  Metodologia (fuente, instrumentos, cadena custodia, validacion)
-  IV.   Hechos observados en los datos (factico, sin inferencia)
-  V.    Analisis estadistico descriptivo e inferencial
-  VI.   Hallazgos estadisticos (descripcion, NO calificacion juridica)
-  VII.  Sugerencias para interpretacion pericial (patrones a evaluar)
-  VIII. Limitaciones y alcance del informe
-  IX.   Anexos probatorios
-  X.    Firma tecnica
+  I.    Objeto del informe
+  II.   Metodologia (fuente, instrumentos, cadena custodia, validacion)
+  III.  Hechos observados en los datos
+  IV.   Analisis estadistico descriptivo e inferencial
+  V.    Hallazgos estadisticos
+  VI.   Observaciones e hipotesis a evaluar
+  VII.  Limitaciones y alcance del analisis
+  VIII. Anexos
+  IX.   Firma
 
-El nombre del cliente NO aparece. El equipo tecnico firma como
-responsable de datos, no como perito oficial.
+Documento confidencial. Uso restringido del destinatario.
 """
 from __future__ import annotations
 
@@ -177,86 +174,74 @@ def _header_footer(canvas, doc):
     canvas.setFont("Helvetica", 7)
     canvas.setFillColor(GRIS_MEDIO)
     canvas.drawString(2 * cm, HEIGHT - 1.6 * cm,
-                      "INFORME TECNICO DE DATOS ESTADISTICOS")
+                      "INFORME TECNICO DE ANALISIS DE DATOS")
     canvas.drawRightString(WIDTH - 2 * cm, HEIGHT - 1.6 * cm,
-                           f"Expediente: {doc.expediente_id}")
+                           f"Ref: {doc.expediente_id}")
     canvas.line(2 * cm, 1.5 * cm, WIDTH - 2 * cm, 1.5 * cm)
     canvas.drawString(2 * cm, 1 * cm,
-                      "Documento tecnico - Insumo para peritaje oficial y defensa legal")
+                      "Documento confidencial - Uso restringido del destinatario")
     canvas.drawRightString(WIDTH - 2 * cm, 1 * cm, f"Pag. {doc.page}")
     canvas.restoreState()
 
 
-def _sugerencias(stats: dict, umbrales) -> list[str]:
-    """Sugerencias de interpretacion basadas estrictamente en los datos.
-
-    Cada sugerencia es una pregunta que el perito oficial o el abogado
-    deberian evaluar. No constituye conclusion juridica.
-    """
-    sug = []
+def _observaciones(stats: dict, umbrales) -> list[str]:
+    """Observaciones e hipotesis a evaluar, basadas en los datos."""
+    obs = []
 
     if umbrales.mesas_tardias > 0:
-        sug.append(
+        obs.append(
             f"Se observa retraso de instalacion en {umbrales.mesas_tardias:,} "
             f"mesas ({umbrales.pct_tardias:.1f}%). "
-            f"<b>Pregunta sugerida al perito:</b> ¿cual fue la causa documentada "
-            f"del retraso en cada mesa? (miembros ausentes, material no entregado, "
-            f"local no abierto). La respuesta determina si califica como "
-            f"irregularidad imputable a la autoridad electoral."
+            f"<b>Hipotesis a evaluar:</b> determinar la causa documentada "
+            f"del retraso en cada mesa (miembros ausentes, material no "
+            f"entregado, local no abierto)."
         )
 
     if stats["p_value"] is not None and stats["p_value"] < 0.05:
-        sug.append(
+        obs.append(
             f"La asociacion entre hora de instalacion y ausentismo es "
             f"estadisticamente significativa (p = {stats['p_value']:.4g}). "
-            f"<b>Pregunta sugerida al perito:</b> ¿esta asociacion es causal "
-            f"o existen variables confusoras no controladas (nivel "
-            f"socioeconomico del local, distancia al mismo, clima, etc.)? "
-            f"Un analisis multivariado o de discontinuidad podria "
-            f"fortalecer o debilitar esta inferencia."
+            f"<b>Hipotesis a evaluar:</b> si esta asociacion es causal o "
+            f"si existen variables confusoras no controladas (nivel "
+            f"socioeconomico del local, distancia, clima). Un analisis "
+            f"multivariado o de discontinuidad podria fortalecer o "
+            f"debilitar esta inferencia."
         )
 
     if stats["afectados"] > 0:
-        sug.append(
+        obs.append(
             f"El modelo contrafactual estima <b>{stats['afectados']:,}</b> "
             f"electores que no votaron con un patron estadistico compatible "
             f"con el retraso de instalacion. "
-            f"<b>Pregunta sugerida al perito:</b> ¿es posible solicitar al "
-            f"JEE el padron de los ausentes para verificar si coincide con "
-            f"el patron demografico de las mesas tardias? Esta cifra es "
-            f"una ESTIMACION bajo supuestos, no un conteo individual."
+            f"<b>Observacion:</b> esta cifra es una ESTIMACION bajo "
+            f"supuestos, no un conteo individual. La verificacion del "
+            f"padron de ausentes permitiria contrastarla."
         )
 
     if umbrales.mesas_sin_acta > 0:
-        sug.append(
+        obs.append(
             f"Se detectaron <b>{umbrales.mesas_sin_acta:,} mesas con votos "
             f"pero sin acta de escrutinio cargada en el portal ONPE</b> "
             f"({umbrales.votos_sin_acta:,} votos). "
-            f"<b>Pregunta sugerida al perito:</b> ¿estas actas fisicamente "
-            f"existen pero no fueron digitalizadas, o nunca se emitieron? "
-            f"La ausencia total del acta fisica configura una hipotesis "
-            f"distinta (art. 363 LOE) que la sola ausencia del PDF digital. "
-            f"Se recomienda requerimiento formal a la ONPE."
+            f"<b>Hipotesis a evaluar:</b> si estas actas existen "
+            f"fisicamente pero no fueron digitalizadas, o si no fueron "
+            f"emitidas."
         )
 
     if umbrales.pct_blanco_nulos > 20:
-        sug.append(
+        obs.append(
             f"El porcentaje de votos blancos y nulos en el distrito es de "
-            f"{umbrales.pct_blanco_nulos:.2f}% (sobre el total emitido), "
-            f"superior al promedio nacional historico. "
-            f"<b>Pregunta sugerida al perito:</b> ¿este patron es homogeneo "
-            f"entre mesas o se concentra en mesas especificas? La "
-            f"concentracion en mesas determinadas podria indicar problemas "
-            f"con el material electoral o con la capacitacion de miembros."
+            f"{umbrales.pct_blanco_nulos:.2f}% sobre el total emitido. "
+            f"<b>Hipotesis a evaluar:</b> si el patron es homogeneo entre "
+            f"mesas o se concentra en mesas especificas."
         )
 
-    sug.append(
-        "<b>Limitaciones de los datos:</b> la extraccion de hora de "
-        "instalacion fue validada manualmente en una sub-muestra. El perito "
-        "oficial puede solicitar re-lectura fisica del 100% de actas "
-        "fisicas para blindar la evidencia."
+    obs.append(
+        "<b>Nota:</b> la extraccion de hora de instalacion fue validada "
+        "manualmente en una sub-muestra. Re-lectura humana del 100% de "
+        "actas fisicas es tecnicamente posible si se requiere."
     )
-    return sug
+    return obs
 
 
 def _build_story(distrito: str, distrito_dir: str, s: dict) -> list:
@@ -273,10 +258,9 @@ def _build_story(distrito: str, distrito_dir: str, s: dict) -> list:
 
     # PORTADA
     st.append(Spacer(1, 3 * cm))
-    st.append(Paragraph("INFORME TECNICO<br/>DE DATOS ESTADISTICOS", s["titulo"]))
+    st.append(Paragraph("INFORME TECNICO<br/>DE ANALISIS DE DATOS", s["titulo"]))
     st.append(Spacer(1, 0.5 * cm))
     st.append(Paragraph(
-        "Insumo para peritaje oficial<br/>"
         "Proceso electoral - Elecciones Generales 2026",
         s["subtitulo"],
     ))
@@ -284,78 +268,44 @@ def _build_story(distrito: str, distrito_dir: str, s: dict) -> list:
     portada_tabla = Table([
         ["Distrito analizado:", distrito],
         ["Proceso electoral:", "Elecciones Generales 2026 - Lima Metropolitana"],
-        ["Emisor:", "Equipo tecnico de ingenieria de datos"],
         ["Fecha de emision:", hoy],
         ["Version:", "1.0"],
-        ["Commit fuente:", commit],
         ["Hash dataset (SHA-256):", csv_hash[:32] + "..."],
     ], colWidths=[5 * cm, 11 * cm])
     portada_tabla.setStyle(_tabla_style())
     st.append(portada_tabla)
     st.append(Spacer(1, 2 * cm))
-    st.append(Paragraph("DOCUMENTO TECNICO - NO SUSTITUYE PERITAJE OFICIAL", s["conf"]))
+    st.append(Paragraph("DOCUMENTO CONFIDENCIAL", s["conf"]))
     st.append(Paragraph(
-        "El presente documento es un informe tecnico de ingenieria de datos "
-        "y estadistica aplicada. Su finalidad es servir de insumo tecnico "
-        "verificable al perito oficial y al abogado patrocinante. "
-        "No contiene calificaciones juridicas ni conclusiones periciales "
-        "forenses, las cuales corresponden exclusivamente al perito "
-        "oficialmente designado.",
+        "Documento tecnico de analisis estadistico sobre datos oficiales de "
+        "la ONPE. Uso restringido del destinatario. No reproducir ni "
+        "difundir sin autorizacion expresa.",
         s["body"],
     ))
     st.append(NextPageTemplate("normal"))
     st.append(PageBreak())
 
-    # I. IDENTIFICACION DEL EQUIPO TECNICO
-    st.append(Paragraph("I. IDENTIFICACION DEL EQUIPO TECNICO", s["seccion"]))
+    # I. OBJETO DEL INFORME
+    st.append(Paragraph("I. OBJETO DEL INFORME", s["seccion"]))
     st.append(Paragraph(
-        "El presente informe es emitido por un equipo de ingenieria de datos "
-        "y estadistica aplicada. El equipo declara su competencia unicamente "
-        "en las siguientes areas: (i) captura automatizada y verificable de "
-        "datos publicos, (ii) procesamiento y normalizacion de informacion, "
-        "(iii) aseguramiento de integridad mediante hashes criptograficos, "
-        "(iv) analisis estadistico descriptivo e inferencial.",
+        f"Entrega de datos oficiales ONPE capturados y normalizados para el "
+        f"distrito de <b>{distrito}</b>, con cadena de custodia y hash "
+        f"SHA-256 por pieza. Incluye estadistica descriptiva e inferencial "
+        f"sobre hora de instalacion, ausentismo y resultados por mesa; "
+        f"identificacion de mesas con anomalias en la documentacion "
+        f"oficial; y observaciones e hipotesis a evaluar basadas "
+        f"estrictamente en los datos.",
         s["body"],
     ))
     st.append(Paragraph(
-        "<b>El equipo no actua como perito forense ni como abogado.</b> "
-        "No emite opinion juridica ni califica hechos como constitutivos de "
-        "nulidad. Las conclusiones de orden juridico y la calificacion pericial "
-        "corresponden a los profesionales oficialmente designados para tales "
-        "efectos.",
-        s["body"],
-    ))
-
-    # II. OBJETO DEL INFORME
-    st.append(Paragraph("II. OBJETO DEL INFORME", s["seccion"]))
-    st.append(Paragraph("2.1 Lo que este informe SI entrega", s["subseccion"]))
-    st.append(Paragraph(
-        f"(a) Datos oficiales ONPE capturados y normalizados para el distrito "
-        f"de <b>{distrito}</b>, con cadena de custodia y hash SHA-256 de cada "
-        f"pieza.<br/>"
-        "(b) Estadistica descriptiva de hora de instalacion, ausentismo y "
-        "resultados por mesa.<br/>"
-        "(c) Estadistica inferencial: comparacion de medias, regresion lineal "
-        "y estimacion contrafactual.<br/>"
-        "(d) Identificacion de mesas con anomalias en la documentacion "
-        "oficial.<br/>"
-        "(e) Sugerencias de preguntas e hipotesis que el perito oficial "
-        "podria evaluar a partir de estos datos.",
-        s["body"],
-    ))
-    st.append(Paragraph("2.2 Lo que este informe NO entrega", s["subseccion"]))
-    st.append(Paragraph(
-        "No califica hechos como nulidad electoral. No interpreta articulos "
-        "de la LOE. No establece responsabilidades juridicas. No reemplaza "
-        "el peritaje oficial requerido por el JNE. No emite opinion sobre "
-        "la validez de la eleccion. Esas son funciones exclusivas del perito "
-        "oficial y del abogado patrocinante.",
+        "El documento es de naturaleza tecnico-estadistica. No contiene "
+        "calificaciones juridicas ni conclusiones de valoracion legal.",
         s["body"],
     ))
 
-    # III. METODOLOGIA
-    st.append(Paragraph("III. METODOLOGIA", s["seccion"]))
-    st.append(Paragraph("3.1 Fuente de datos primaria", s["subseccion"]))
+    # II. METODOLOGIA
+    st.append(Paragraph("II. METODOLOGIA", s["seccion"]))
+    st.append(Paragraph("2.1 Fuente de datos primaria", s["subseccion"]))
     st.append(Paragraph(
         "Portal oficial de la ONPE: "
         "<i>https://resultadoelectoral.onpe.gob.pe/</i>. "
@@ -364,7 +314,7 @@ def _build_story(distrito: str, distrito_dir: str, s: dict) -> list:
         "fueron descargados del mismo portal oficial.",
         s["body"],
     ))
-    st.append(Paragraph("3.2 Instrumentos tecnicos", s["subseccion"]))
+    st.append(Paragraph("2.2 Instrumentos tecnicos", s["subseccion"]))
     st.append(Paragraph(
         "- Captura automatizada via navegador Playwright (stealth mode)<br/>"
         "- Base de datos relacional SQLite (forensic.db)<br/>"
@@ -374,7 +324,7 @@ def _build_story(distrito: str, distrito_dir: str, s: dict) -> list:
         "- Cadena de custodia en tabla SQL inmutable con timestamps UTC",
         s["body"],
     ))
-    st.append(Paragraph("3.3 Validacion", s["subseccion"]))
+    st.append(Paragraph("2.3 Validacion", s["subseccion"]))
     st.append(Paragraph(
         "Las horas extraidas por vision por computador fueron verificadas "
         "manualmente contra los PDFs originales en una sub-muestra que "
@@ -384,7 +334,7 @@ def _build_story(distrito: str, distrito_dir: str, s: dict) -> list:
         "auditados.",
         s["body"],
     ))
-    st.append(Paragraph("3.4 Metodos estadisticos", s["subseccion"]))
+    st.append(Paragraph("2.4 Metodos estadisticos", s["subseccion"]))
     st.append(Paragraph(
         "(a) Comparacion de medias de ausentismo entre mesas instaladas "
         "oportunamente (<=9:00 a.m., umbral de referencia legal) y "
@@ -400,32 +350,64 @@ def _build_story(distrito: str, distrito_dir: str, s: dict) -> list:
         s["body"],
     ))
 
-    # IV. HECHOS OBSERVADOS EN LOS DATOS
+    # III. HECHOS OBSERVADOS EN LOS DATOS
     st.append(PageBreak())
-    st.append(Paragraph("IV. HECHOS OBSERVADOS EN LOS DATOS", s["seccion"]))
+    st.append(Paragraph("III. HECHOS OBSERVADOS EN LOS DATOS", s["seccion"]))
+    st.append(Paragraph("3.1 Universo analizado", s["subseccion"]))
+    _mesas_con = umbrales.total_mesas - umbrales.mesas_sin_acta
+    _pct_con = (_mesas_con / umbrales.total_mesas * 100) if umbrales.total_mesas else 0.0
+    st.append(Paragraph(
+        f"El universo oficial del distrito de <b>{distrito}</b> es de "
+        f"<b>{umbrales.total_mesas:,} mesas</b> de sufragio. De este universo, "
+        f"<b>{_mesas_con:,} mesas ({_pct_con:.1f}%)</b> cuentan con acta de "
+        f"escrutinio presidencial publicada en el portal oficial de la ONPE "
+        f"al momento del corte de datos, y <b>{umbrales.mesas_sin_acta:,} "
+        f"mesas ({100 - _pct_con:.1f}%)</b> no cuentan con acta publicada "
+        f"en dicho portal.",
+        s["body"],
+    ))
+    st.append(Paragraph(
+        "<b>Alcance del analisis:</b> el analisis cuantitativo que sigue "
+        "se realiza exclusivamente sobre las mesas con acta publicada en "
+        "ONPE, unica fuente oficial disponible. Las mesas sin acta "
+        "publicada quedan fuera del analisis por ausencia de datos "
+        "oficiales. Esta limitacion afecta la <b>completitud</b> del "
+        "analisis pero no la veracidad de lo observado en las mesas si "
+        "analizadas.",
+        s["body"],
+    ))
+    st.append(Spacer(1, 6))
+    st.append(Paragraph("3.2 Cifras del distrito", s["subseccion"]))
     st.append(Paragraph(
         "Los siguientes valores son lectura directa de los datos oficiales "
         "ONPE. No constituyen interpretacion.",
         s["body"],
     ))
+    mesas_con_acta = umbrales.total_mesas - umbrales.mesas_sin_acta
+    pct_con_acta = (mesas_con_acta / umbrales.total_mesas * 100) if umbrales.total_mesas else 0.0
     hechos = [
         ["Concepto", "Valor"],
         ["Total de mesas en el distrito (con datos)", f"{umbrales.total_mesas:,}"],
-        ["Mesas instaladas despues de las 9:00 a.m.", f"{umbrales.mesas_tardias:,} ({umbrales.pct_tardias:.1f}%)"],
+        ["Mesas con acta de escrutinio presidencial en ONPE",
+         f"{mesas_con_acta:,} ({pct_con_acta:.1f}%)"],
+        ["Mesas SIN acta de escrutinio presidencial en ONPE",
+         f"{umbrales.mesas_sin_acta:,} ({100 - pct_con_acta:.1f}%)"],
+        ["Mesas instaladas despues de las 9:00 a.m.",
+         f"{umbrales.mesas_tardias:,} ({umbrales.pct_tardias:.1f}%)"],
         ["Total de votos emitidos (suma distrital)", f"{umbrales.total_emitidos:,}"],
         ["Votos en blanco", f"{umbrales.total_blanco:,}"],
         ["Votos nulos", f"{umbrales.total_nulos:,}"],
         ["Porcentaje blanco + nulos sobre emitidos", f"{umbrales.pct_blanco_nulos:.2f}%"],
-        ["Mesas sin acta de escrutinio cargada en ONPE", f"{umbrales.mesas_sin_acta:,}"],
-        ["Votos sin respaldo documental digital", f"{umbrales.votos_sin_acta:,} ({umbrales.pct_votos_sin_acta:.1f}%)"],
+        ["Votos sin respaldo documental digital",
+         f"{umbrales.votos_sin_acta:,} ({umbrales.pct_votos_sin_acta:.1f}%)"],
     ]
     t = Table(hechos, colWidths=[10 * cm, 6 * cm])
     t.setStyle(_tabla_style())
     st.append(t)
 
-    # V. ANALISIS ESTADISTICO
-    st.append(Paragraph("V. ANALISIS ESTADISTICO", s["seccion"]))
-    st.append(Paragraph("5.1 Comparacion de medias", s["subseccion"]))
+    # IV. ANALISIS ESTADISTICO
+    st.append(Paragraph("IV. ANALISIS ESTADISTICO", s["seccion"]))
+    st.append(Paragraph("4.1 Comparacion de medias", s["subseccion"]))
     analisis_tabla = [
         ["Grupo", "N mesas", "Ausentismo promedio"],
         ["Instalacion oportuna (<=9 a.m.)", f"{stats['n_antes']:,}", f"{stats['media_antes']:.2f}%"],
@@ -436,7 +418,7 @@ def _build_story(distrito: str, distrito_dir: str, s: dict) -> list:
     t2.setStyle(_tabla_style())
     st.append(t2)
 
-    st.append(Paragraph("5.2 Test de significancia (Welch)", s["subseccion"]))
+    st.append(Paragraph("4.2 Test de significancia (Welch)", s["subseccion"]))
     if stats["p_value"] is not None:
         if stats["p_value"] < 0.001:
             interp = "Diferencia estadisticamente significativa (p < 0.001)."
@@ -452,7 +434,7 @@ def _build_story(distrito: str, distrito_dir: str, s: dict) -> list:
     else:
         st.append(Paragraph("No hay muestra suficiente para realizar el test.", s["body"]))
 
-    st.append(Paragraph("5.3 Regresion lineal (OLS)", s["subseccion"]))
+    st.append(Paragraph("4.3 Regresion lineal (OLS)", s["subseccion"]))
     st.append(Paragraph(
         f"Ecuacion ajustada: ausentismo_pct = {stats['ols_intercepto']} + "
         f"{stats['ols_pendiente']} &#215; hora_decimal.<br/>"
@@ -464,7 +446,7 @@ def _build_story(distrito: str, distrito_dir: str, s: dict) -> list:
         s["body"],
     ))
 
-    st.append(Paragraph("5.4 Estimacion contrafactual", s["subseccion"]))
+    st.append(Paragraph("4.4 Estimacion contrafactual", s["subseccion"]))
     st.append(Paragraph(
         f"Bajo el supuesto de que las mesas tardias habrian registrado el "
         f"mismo nivel de ausentismo baseline observado en las mesas "
@@ -476,8 +458,8 @@ def _build_story(distrito: str, distrito_dir: str, s: dict) -> list:
         s["body"],
     ))
 
-    # 5.5 Impacto estimado en votos por candidato
-    st.append(Paragraph("5.5 Impacto estimado en votos por candidato", s["subseccion"]))
+    # 4.5 Impacto estimado en votos por candidato
+    st.append(Paragraph("4.5 Impacto estimado en votos por candidato", s["subseccion"]))
     st.append(Paragraph(
         "Se estima el numero de votos que cada candidato habria recibido si "
         "las mesas tardias hubieran abierto a la hora legal. Se aplican tres "
@@ -524,12 +506,12 @@ def _build_story(distrito: str, distrito_dir: str, s: dict) -> list:
                             s["body"]))
         _perdidos_stats = {"rla_a": 0, "rla_b": 0, "rla_c": 0, "exceso": 0}
 
-    # VI. HALLAZGOS ESTADISTICOS
+    # V. HALLAZGOS ESTADISTICOS
     st.append(PageBreak())
-    st.append(Paragraph("VI. HALLAZGOS ESTADISTICOS", s["seccion"]))
+    st.append(Paragraph("V. HALLAZGOS ESTADISTICOS", s["seccion"]))
     st.append(Paragraph(
         "Los hallazgos son la descripcion tecnica de los datos. "
-        "<b>No constituyen calificacion juridica ni conclusion pericial.</b>",
+        "<b>No constituyen calificacion juridica.</b>",
         s["body"],
     ))
     p_txt = f"{stats['p_value']:.4g}" if stats["p_value"] is not None else "n/d"
@@ -558,7 +540,7 @@ def _build_story(distrito: str, distrito_dir: str, s: dict) -> list:
         f"votos sin respaldo documental digital en el portal.",
 
         f"<b>H6.</b> La estimacion contrafactual de votos por candidato "
-        f"(seccion 5.5) arroja rangos convergentes entre las tres reglas "
+        f"(seccion 4.5) arroja rangos convergentes entre las tres reglas "
         f"de asignacion aplicadas (A, B, C), lo que indica <b>robustez "
         f"metodologica</b> frente al supuesto elegido para distribuir el "
         f"exceso de ausentes. El detalle completo por candidato figura en "
@@ -568,33 +550,37 @@ def _build_story(distrito: str, distrito_dir: str, s: dict) -> list:
         st.append(Paragraph(h, s["body"]))
         st.append(Spacer(1, 4))
 
-    # VII. SUGERENCIAS PARA INTERPRETACION PERICIAL
+    # VI. OBSERVACIONES E HIPOTESIS A EVALUAR
     st.append(PageBreak())
-    st.append(Paragraph("VII. SUGERENCIAS PARA INTERPRETACION PERICIAL", s["seccion"]))
+    st.append(Paragraph("VI. OBSERVACIONES E HIPOTESIS A EVALUAR", s["seccion"]))
     st.append(Paragraph(
-        "Esta seccion es el aporte principal del equipo tecnico al perito "
-        "oficial. Son <b>preguntas basadas en patrones detectados en los "
-        "datos</b>, no respuestas juridicas. Cada sugerencia se fundamenta "
-        "en evidencia estadistica cuantificable; corresponde al perito "
-        "oficial determinar su relevancia legal.",
+        "Observaciones basadas estrictamente en los patrones detectados en "
+        "los datos. Cada observacion se fundamenta en evidencia estadistica "
+        "cuantificable.",
         s["body"],
     ))
     st.append(Spacer(1, 6))
-    for i, sug in enumerate(_sugerencias(stats, umbrales), 1):
-        st.append(Paragraph(f"S{i}. {sug}", s["body"]))
+    for i, ob in enumerate(_observaciones(stats, umbrales), 1):
+        st.append(Paragraph(f"O{i}. {ob}", s["body"]))
         st.append(Spacer(1, 6))
 
-    # VIII. LIMITACIONES Y ALCANCE
-    st.append(Paragraph("VIII. LIMITACIONES Y ALCANCE DEL INFORME", s["seccion"]))
+    # VII. LIMITACIONES Y ALCANCE
+    st.append(Paragraph("VII. LIMITACIONES Y ALCANCE DEL ANALISIS", s["seccion"]))
     limitaciones = [
+        f"El analisis se realiza unicamente sobre las mesas con acta "
+        f"publicada en el portal oficial de la ONPE al momento del corte "
+        f"de datos. Las <b>{umbrales.mesas_sin_acta:,} mesas</b> del "
+        f"distrito sin acta publicada en el portal oficial quedan fuera "
+        f"del analisis cuantitativo por ausencia de datos oficiales. Esto "
+        f"limita la completitud del universo analizado.",
+
         "Las horas de instalacion fueron extraidas por vision por computador. "
         "La validacion manual cubrio una sub-muestra; no el 100% de las "
-        "actas. Se recomienda re-lectura humana del total si se requiere "
-        "cero margen de error.",
+        "actas. Re-lectura humana del total es tecnicamente posible si se "
+        "requiere cero margen de error.",
 
         "El umbral de 9:00 a.m. utilizado para dicotomizar mesas es de "
-        "referencia tecnica. La definicion legal exacta y sus tolerancias "
-        "deben ser determinadas por el perito oficial.",
+        "referencia tecnica.",
 
         "La regresion OLS aplicada es univariada y no controla por variables "
         "confusoras (ubicacion del local, nivel socioeconomico, clima). "
@@ -607,63 +593,35 @@ def _build_story(distrito: str, distrito_dir: str, s: dict) -> list:
 
         "Los errores estandar reportados por OLS son no-robustos y no "
         "consideran la posible agrupacion de mesas en locales de votacion. "
-        "Un modelo con errores estandar cluster-robustos es posible y "
-        "recomendado para el informe pericial final.",
+        "Un modelo con errores estandar cluster-robustos es posible.",
 
         "Los datos provienen integramente de la ONPE. Cualquier error en "
-        "la fuente se traslada al informe. Se recomienda verificacion "
-        "cruzada con actas fisicas en el JEE respectivo.",
+        "la fuente se traslada al informe.",
     ]
     for lim in limitaciones:
         st.append(Paragraph(f"&bull; {lim}", s["body"]))
         st.append(Spacer(1, 3))
 
-    # IX. ANEXOS
-    st.append(Paragraph("IX. ANEXOS PROBATORIOS", s["seccion"]))
+    # VIII. CIERRE
+    st.append(Paragraph("VIII. CIERRE", s["seccion"]))
     st.append(Paragraph(
-        "El presente informe se acompana de los siguientes anexos tecnicos, "
-        "todos con hash SHA-256 registrado en el indice del expediente:",
+        "La informacion consignada en el presente informe es el resultado "
+        "del procesamiento de los datos publicos obtenidos de la ONPE "
+        "mediante procedimientos reproducibles.",
         s["body"],
     ))
-    anexos = [
-        "Anexo A - Tabla integra de mesas con hora de instalacion y "
-        "ausentismo (XLSX foliado).",
-        "Anexo B - Catalogo de hashes SHA-256 de todos los documentos fuente.",
-        "Anexo C - Archivos PDF originales descargados del portal oficial ONPE.",
-        "Anexo D - Registro completo de cadena de custodia (CSV).",
-        "Anexo E - Codigo fuente reproducible con identificador de commit git.",
-        "Anexo F - Diccionario de datos con definicion de cada variable.",
-    ]
-    for a in anexos:
-        st.append(Paragraph(f"&bull; {a}", s["body"]))
-        st.append(Spacer(1, 2))
-
-    # X. FIRMA TECNICA
-    st.append(Paragraph("X. FIRMA TECNICA", s["seccion"]))
     st.append(Paragraph(
-        "El equipo tecnico declara que la informacion consignada en el "
-        "presente informe es el resultado fiel del procesamiento de los "
-        "datos publicos obtenidos de la ONPE, que los procedimientos "
-        "descritos son reproducibles por cualquier tercero con acceso a "
-        "los mismos datos publicos, y que los anexos referidos son fiel "
-        "copia de los documentos originales cuyos hashes criptograficos "
-        "se consignan para su verificacion.",
-        s["body"],
+        f"Hash SHA-256 del dataset fuente (verificable): {csv_hash}",
+        s["body_cita"],
     ))
-    st.append(Spacer(1, 1.2 * cm))
-    firma_tabla = Table([
-        ["_______________________________", "_______________________________"],
-        ["Responsable tecnico de datos", "Perito oficial designado"],
-        ["Ingenieria de datos / estadistica", "(a ser consignado)"],
-    ], colWidths=[8 * cm, 8 * cm])
-    firma_tabla.setStyle(TableStyle([
-        ("FONTSIZE", (0, 0), (-1, -1), 8.5),
-        ("FONTNAME", (0, 0), (-1, 0), "Helvetica"),
-        ("FONTNAME", (0, 1), (-1, 1), "Helvetica-Bold"),
-        ("TEXTCOLOR", (0, 0), (-1, -1), GRIS_OSCURO),
-        ("ALIGN", (0, 0), (-1, -1), "CENTER"),
-    ]))
-    st.append(firma_tabla)
+    st.append(Paragraph(
+        f"Commit del codigo fuente utilizado: {commit}",
+        s["body_cita"],
+    ))
+    st.append(Paragraph(
+        f"Fecha de emision: {hoy}",
+        s["body_cita"],
+    ))
 
     return st
 
