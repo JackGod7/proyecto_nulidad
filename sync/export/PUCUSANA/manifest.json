@@ -1,35 +1,35 @@
 {
   "archivos": {
     "acta_estado_historial.ndjson.gz": {
-      "bytes": 1026,
+      "bytes": 1012,
       "rows": 48,
-      "sha256": "fb1914c61b6b088662b84df8a09de4a91206d51aa75c5493a932323b074d467f"
+      "sha256": "f829609d126a44e990afa6f213d843ae1d685f40d0400860cd9b41977d705a35"
     },
     "actas.ndjson.gz": {
-      "bytes": 3958,
+      "bytes": 3805,
       "rows": 44,
-      "sha256": "fd38c3c9b09423f2b93ecd01ea1a607b63b0725871331547c692ba373f7e6b23"
+      "sha256": "2591e70fb4e546acd0a6f56d114ae1b1f9718a39046d6fd6a792f099ac74105c"
     },
     "instalaciones.ndjson.gz": {
-      "bytes": 1481,
+      "bytes": 1468,
       "rows": 40,
-      "sha256": "21744295aecc747978d3cf4ec15fe5390676afb1d398afc6027d08bce0e8445b"
+      "sha256": "bfc67689e3fccb88a79b43662c28cfc1aba28436e51e2c7923bbab6c9305404c"
     },
     "pdfs.ndjson.gz": {
-      "bytes": 7904,
+      "bytes": 8124,
       "rows": 120,
-      "sha256": "672c9442f3dada0ea6cdb216b4062b1c29ccc4af0d6728a6765cfe5d2f125293"
+      "sha256": "988a8457bccb2ea53d073b116a4bcb3132ea91cf3a3e8f2bb75ed7397b630426"
     },
     "votos.ndjson.gz": {
-      "bytes": 15228,
+      "bytes": 24261,
       "rows": 1672,
-      "sha256": "5bced41d701778b4e6b9345e878d67b4e65341604952bda7ee1ba68d16ce0fa2"
+      "sha256": "a41d8d686598f3f2af0b82f1ca2c44f7c098d21880b463cbd5131d93e2eb3a24"
     }
   },
   "distrito": "PUCUSANA",
-  "exported_at": "2026-04-18T17:39:20+00:00",
-  "maquina": "DETI-0013",
-  "operador": "jaaguilar",
+  "exported_at": "2026-04-18T21:28:46+00:00",
+  "maquina": "Hector",
+  "operador": "hecto",
   "schema_version": 2,
   "slug": "PUCUSANA",
   "total_rows": 1924
