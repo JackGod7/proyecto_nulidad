@@ -3,26 +3,26 @@
     "actas.ndjson.gz": {
       "bytes": 2786,
       "rows": 32,
-      "sha256": "c3540dd708f9d31e96b4b8f519afa6a7676d4773f18645850e78c7eb373442b1"
+      "sha256": "3a7e1e0a9c35c8e1923f1142294f8ab150aaf3b966dd0fa08e725e4ef5408fe8"
     },
     "instalaciones.ndjson.gz": {
       "bytes": 1362,
       "rows": 31,
-      "sha256": "0a932ea9807898336d4f4de6674aadec91bf46ce630bbc71df75a6d497621971"
+      "sha256": "1a7ffec35ac944ee5cdccb6175bd4547637959b9dde1996730fb64207773a274"
     },
     "pdfs.ndjson.gz": {
       "bytes": 6351,
       "rows": 93,
-      "sha256": "3afaced1cfbfc2f6e7f35ebefa4b3638c2c2c0bc24ce6d7f4222bfc466930e90"
+      "sha256": "63aee1531dadf6ad0e8fccc78dcf70ab01b11ca8e7e5c2f6e524d3b6d4d9b102"
     },
     "votos.ndjson.gz": {
       "bytes": 18302,
       "rows": 1216,
-      "sha256": "8056c56fd41a2517a468659eb0ca72700b232d723082dd047735e7b5c2d2bc5f"
+      "sha256": "91438eedb41cecdf018b12da1aa6df78417dd4fa27aab9f7a203346233ac07b4"
     }
   },
   "distrito": "PUNTA HERMOSA",
-  "exported_at": "2026-04-18T21:12:01+00:00",
+  "exported_at": "2026-04-18T21:16:31+00:00",
   "maquina": "Hector",
   "operador": "hecto",
   "schema_version": 2,
