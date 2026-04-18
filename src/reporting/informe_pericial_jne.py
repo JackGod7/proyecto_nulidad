@@ -32,13 +32,15 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.units import cm
 from reportlab.platypus import (
-    BaseDocTemplate, Frame, NextPageTemplate, PageBreak,
-    PageTemplate, Paragraph, Spacer, Table, TableStyle,
+    BaseDocTemplate, CondPageBreak, Frame, KeepTogether,
+    NextPageTemplate, PageBreak, PageTemplate, Paragraph,
+    Spacer, Table, TableStyle,
 )
 from scipy.stats import ttest_ind
 import statsmodels.api as sm
 
 from src.audit.umbrales_loe import calcular as calcular_umbrales
+from src.audit.verificar_sesgo_actas import analizar as analizar_sesgo_actas
 from src.reporting.votos_perdidos_rla import estimar_distrito as estimar_perdidos
 
 NEGRO = colors.HexColor("#1a1a1a")
@@ -62,14 +64,17 @@ def _estilos() -> dict:
         "subtitulo": ParagraphStyle("st", fontName="Helvetica", fontSize=11,
             textColor=GRIS_OSCURO, leading=14, alignment=TA_CENTER, spaceAfter=16),
         "seccion": ParagraphStyle("s", fontName="Helvetica-Bold", fontSize=13,
-            textColor=NEGRO, leading=16, spaceBefore=14, spaceAfter=8),
+            textColor=NEGRO, leading=16, spaceBefore=12, spaceAfter=6,
+            keepWithNext=1),
         "subseccion": ParagraphStyle("ss", fontName="Helvetica-Bold", fontSize=10,
-            textColor=GRIS_OSCURO, leading=13, spaceBefore=8, spaceAfter=4),
+            textColor=GRIS_OSCURO, leading=13, spaceBefore=8, spaceAfter=3,
+            keepWithNext=1),
         "body": ParagraphStyle("b", fontName="Helvetica", fontSize=9.5,
-            textColor=GRIS_OSCURO, leading=14, alignment=TA_JUSTIFY, spaceAfter=4),
+            textColor=GRIS_OSCURO, leading=13.5, alignment=TA_JUSTIFY,
+            spaceAfter=4),
         "body_cita": ParagraphStyle("bc", fontName="Helvetica-Oblique", fontSize=9,
-            textColor=GRIS_OSCURO, leading=13, alignment=TA_JUSTIFY,
-            leftIndent=15, rightIndent=15, spaceBefore=4, spaceAfter=4),
+            textColor=GRIS_OSCURO, leading=12.5, alignment=TA_JUSTIFY,
+            leftIndent=15, rightIndent=15, spaceBefore=3, spaceAfter=3),
         "footer": ParagraphStyle("f", fontName="Helvetica", fontSize=7,
             textColor=GRIS_MEDIO, leading=9),
         "conf": ParagraphStyle("c", fontName="Helvetica-Bold", fontSize=9,
@@ -351,7 +356,7 @@ def _build_story(distrito: str, distrito_dir: str, s: dict) -> list:
     ))
 
     # III. HECHOS OBSERVADOS EN LOS DATOS
-    st.append(PageBreak())
+    st.append(CondPageBreak(6 * cm))
     st.append(Paragraph("III. HECHOS OBSERVADOS EN LOS DATOS", s["seccion"]))
     st.append(Paragraph("3.1 Universo analizado", s["subseccion"]))
     _mesas_con = umbrales.total_mesas - umbrales.mesas_sin_acta
@@ -404,6 +409,74 @@ def _build_story(distrito: str, distrito_dir: str, s: dict) -> list:
     t = Table(hechos, colWidths=[10 * cm, 6 * cm])
     t.setStyle(_tabla_style())
     st.append(t)
+
+    # 3.3 Mesas con votos computados sin soporte documental publicado
+    try:
+        sesgo = analizar_sesgo_actas(distrito)
+    except Exception:
+        sesgo = None
+    if sesgo is not None and sesgo["sin_acta"] > 0:
+        st.append(Spacer(1, 8))
+        st.append(Paragraph(
+            "3.3 Mesas con votos computados sin soporte documental publicado",
+            s["subseccion"],
+        ))
+        st.append(Paragraph(
+            f"Se identifican <b>{sesgo['sin_acta']:,} mesas</b> del distrito "
+            f"cuyos votos aparecen computados en el portal oficial ONPE pero "
+            f"cuya acta de escrutinio presidencial <b>no se encuentra "
+            f"publicada</b> al momento del corte. De estas, "
+            f"<b>{sesgo['sin_acta_con_votos_portal']:,} mesas</b> reportan "
+            f"<b>{sesgo['votos_sin_acta_total']:,} votos</b> en el portal.",
+            s["body"],
+        ))
+        tabla_33 = [
+            ["Concepto", "Valor"],
+            ["Mesas sin acta presidencial publicada",
+             f"{sesgo['sin_acta']:,}"],
+            ["Mesas sin acta pero con votos en portal",
+             f"{sesgo['sin_acta_con_votos_portal']:,}"],
+            ["Votos computados sin acta publicada",
+             f"{sesgo['votos_sin_acta_total']:,}"],
+            ["Mesas sin acta con hora de instalacion disponible",
+             f"{sesgo['n_sin_hora_disponible']:,}"],
+            ["Mesas con acta con hora de instalacion disponible",
+             f"{sesgo['n_con_hora_disponible']:,}"],
+        ]
+        t33 = Table(tabla_33, colWidths=[10 * cm, 6 * cm])
+        t33.setStyle(_tabla_style())
+        st.append(t33)
+        st.append(Spacer(1, 6))
+        if sesgo["n_sin_hora_disponible"] < 2:
+            st.append(Paragraph(
+                "Verificacion empirica realizada: las mesas sin acta de "
+                "escrutinio publicada <b>tampoco cuentan con acta de "
+                "instalacion publicada</b> en el portal, por lo que no es "
+                "posible medir estadisticamente si su hora de apertura "
+                "difiere del resto. En consecuencia, el analisis "
+                "cuantitativo de las secciones IV y V se realiza sobre las "
+                "mesas con documentacion disponible en el portal oficial. "
+                "Se deja constancia del universo no documentado para "
+                "conocimiento del destinatario.",
+                s["body"],
+            ))
+        else:
+            dif = sesgo["diferencia_min"]
+            p = sesgo["p_value"]
+            sig = (
+                "estadisticamente significativa" if p is not None and p < 0.05
+                else "no estadisticamente significativa"
+            )
+            direccion = "mas tarde" if dif is not None and dif > 0 else "mas temprano"
+            st.append(Paragraph(
+                f"Verificacion empirica realizada: en el subconjunto con "
+                f"hora de instalacion disponible, las mesas sin acta de "
+                f"escrutinio publicada presentan una hora media "
+                f"{direccion} que las mesas con acta publicada "
+                f"(diferencia = {dif:+.1f} minutos, p = {p:.4g}). "
+                f"La diferencia es {sig}.",
+                s["body"],
+            ))
 
     # IV. ANALISIS ESTADISTICO
     st.append(Paragraph("IV. ANALISIS ESTADISTICO", s["seccion"]))
@@ -507,7 +580,7 @@ def _build_story(distrito: str, distrito_dir: str, s: dict) -> list:
         _perdidos_stats = {"rla_a": 0, "rla_b": 0, "rla_c": 0, "exceso": 0}
 
     # V. HALLAZGOS ESTADISTICOS
-    st.append(PageBreak())
+    st.append(CondPageBreak(7 * cm))
     st.append(Paragraph("V. HALLAZGOS ESTADISTICOS", s["seccion"]))
     st.append(Paragraph(
         "Los hallazgos son la descripcion tecnica de los datos. "
@@ -551,7 +624,7 @@ def _build_story(distrito: str, distrito_dir: str, s: dict) -> list:
         st.append(Spacer(1, 4))
 
     # VI. OBSERVACIONES E HIPOTESIS A EVALUAR
-    st.append(PageBreak())
+    st.append(CondPageBreak(6 * cm))
     st.append(Paragraph("VI. OBSERVACIONES E HIPOTESIS A EVALUAR", s["seccion"]))
     st.append(Paragraph(
         "Observaciones basadas estrictamente en los patrones detectados en "
