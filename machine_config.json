@@ -1,9 +1,9 @@
 {
-  "_comment": "MAQUINA_3 - Lote 1 Lima Sur (CIENEGUILLA + PUCUSANA). Rama git: maquina-3",
+  "_comment": "MAQUINA_3 - SJM + VES + PUCUSANA. Rama git: maquina-3",
   "machine_id": "MAQUINA_3",
   "owner": "Tony",
   "lote": 1,
-  "distritos": ["CIENEGUILLA", "PUCUSANA"],
+  "distritos": ["SAN JUAN DE MIRAFLORES", "VILLA EL SALVADOR", "PUCUSANA"],
   "rol": "worker",
-  "fase_actual": "scraping"
+  "fase_actual": "extraccion"
 }
