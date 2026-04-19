@@ -1,36 +1,36 @@
 {
   "archivos": {
     "acta_estado_historial.ndjson.gz": {
-      "bytes": 30907,
-      "rows": 1994,
-      "sha256": "0d32314b2620c56b4feaf760e0c70499e5fe81aa5a48f6a753d16dc7c83a018d"
+      "bytes": 31246,
+      "rows": 2005,
+      "sha256": "bdba7240e1ec45be76e83ff21fa53afd9dbd38eb99947cb5e645c6f038f8d01d"
     },
     "actas.ndjson.gz": {
-      "bytes": 83991,
+      "bytes": 84104,
       "rows": 1163,
-      "sha256": "eaf60f03c9f30da8f11f76477cea5a5ae4b606653cc5c8b5d5c7472f7c6cb231"
+      "sha256": "3c1e58f4c9f5c64e65e1a8c0a260e399a2158986ccb057885a53d71e54948531"
     },
     "instalaciones.ndjson.gz": {
-      "bytes": 20149,
-      "rows": 788,
-      "sha256": "f14e238c28934f1b29c223621fad562346316856ce763fddc092ed5ff687ceb8"
+      "bytes": 26635,
+      "rows": 787,
+      "sha256": "3c41349d8f043fe02d121c5f720479b0d8292eccaaf6d2b5c5efa0a87b2a00b0"
     },
     "pdfs.ndjson.gz": {
-      "bytes": 40376,
-      "rows": 2539,
-      "sha256": "efdbd91991df8641176b0a76ab6b10f50cd8a38024b14ca85da11de71be57860"
+      "bytes": 175997,
+      "rows": 2546,
+      "sha256": "79f73428774fe6bd2d468d437e3b03b5ce8c0c62cd920399410a27830f027d48"
     },
     "votos.ndjson.gz": {
-      "bytes": 539396,
-      "rows": 43890,
-      "sha256": "41ede55b35d1aa54684a567b62fd7783dd9b4885d646576a6122061dd86cec90"
+      "bytes": 604849,
+      "rows": 43928,
+      "sha256": "01c8a418f7541200882830ccd35002471727657efd9b5d369f42a281214ebdcd"
     }
   },
   "distrito": "VILLA EL SALVADOR",
-  "exported_at": "2026-04-18T17:39:27+00:00",
-  "maquina": "DETI-0013",
-  "operador": "jaaguilar",
+  "exported_at": "2026-04-19T02:01:23+00:00",
+  "maquina": "Admin",
+  "operador": "lynpo",
   "schema_version": 2,
   "slug": "VILLA_EL_SALVADOR",
-  "total_rows": 50374
+  "total_rows": 50429
 }
