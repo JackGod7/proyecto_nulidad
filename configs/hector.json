@@ -1,0 +1,8 @@
+{
+  "_comment": "Maquina Hector - Balnearios Sur (~400 actas)",
+  "machine_id": "MAQUINA_HECTOR",
+  "owner": "Hector",
+  "distritos": ["PUNTA HERMOSA", "PUNTA NEGRA", "SAN BARTOLO", "SANTA MARIA DEL MAR", "PUCUSANA"],
+  "rol": "worker",
+  "fase_actual": "scraping"
+}

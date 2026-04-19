@@ -1,16 +1,26 @@
 {
   "archivos": {
-    "actas.ndjson.gz": {
-      "bytes": 653,
+    "acta_estado_historial.ndjson.gz": {
+      "bytes": 275,
       "rows": 6,
-      "sha256": "52eba9a8374900a444a99fcbca5dfdb2269684ec98d61463134189146a36621b"
+      "sha256": "fa0eec760cc26a0d1da8c96cfe361b2b32a7b96820753018e5dad6564f81247f"
+    },
+    "actas.ndjson.gz": {
+      "bytes": 1000,
+      "rows": 6,
+      "sha256": "575bf5e19f89f629f1f51b8a3740c6f4c0fd8ef9d69f151ca27edff62e222ab9"
+    },
+    "votos.ndjson.gz": {
+      "bytes": 4781,
+      "rows": 228,
+      "sha256": "cb5d4ec245bedf475a8c8273a3955323459ce1775f3b4e3b459e1e24a328dfdb"
     }
   },
   "distrito": "SANTA MARÍA DEL MAR",
-  "exported_at": "2026-04-18T17:39:25+00:00",
-  "maquina": "DETI-0013",
-  "operador": "jaaguilar",
+  "exported_at": "2026-04-18T21:21:19+00:00",
+  "maquina": "Hector",
+  "operador": "hecto",
   "schema_version": 2,
   "slug": "SANTA_MARIA_DEL_MAR",
-  "total_rows": 6
+  "total_rows": 240
 }

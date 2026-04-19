@@ -1,0 +1,8 @@
+{
+  "_comment": "Maquina Jim - Cono Sur: Pachacamac + Lurin (~900 actas)",
+  "machine_id": "MAQUINA_JIM",
+  "owner": "Jim",
+  "distritos": ["PACHACAMAC", "LURIN"],
+  "rol": "worker",
+  "fase_actual": "scraping"
+}

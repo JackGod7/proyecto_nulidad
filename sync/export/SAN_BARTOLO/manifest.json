@@ -1,21 +1,36 @@
 {
   "archivos": {
+    "acta_estado_historial.ndjson.gz": {
+      "bytes": 729,
+      "rows": 28,
+      "sha256": "1f80f27e04ace961d2315321e2cd4025899fb6b2d04f72998f48ac9326477920"
+    },
     "actas.ndjson.gz": {
-      "bytes": 1261,
+      "bytes": 2357,
       "rows": 24,
-      "sha256": "957e56b25a272d5339936aed3b746e3dbd10a17f20f2cf4057fbe6423422e6d3"
+      "sha256": "4c787c677463847ddd1a60fd684d12c13a02e2c2314e7ee9a6336a9ab3ed1cc7"
+    },
+    "instalaciones.ndjson.gz": {
+      "bytes": 927,
+      "rows": 21,
+      "sha256": "6902c4eed447ff18f3f8fce81ce445da1f890d64fe2e7f4afc989727ec2c8542"
     },
     "pdfs.ndjson.gz": {
-      "bytes": 906,
-      "rows": 34,
-      "sha256": "d60a7396051750b3fd10c76cbd63f20fe7f512824bfc2fdaca6ff8a955686a6c"
+      "bytes": 4474,
+      "rows": 64,
+      "sha256": "e49d459b7c7e49bfb55443a4251ff00de01e6272222252bead767d72220d3104"
+    },
+    "votos.ndjson.gz": {
+      "bytes": 13503,
+      "rows": 874,
+      "sha256": "30d2c29b357b7eaf809c8c2f407702723c1d3e39284a6fde9f23c927e881f67b"
     }
   },
   "distrito": "SAN BARTOLO",
-  "exported_at": "2026-04-18T17:39:21+00:00",
-  "maquina": "DETI-0013",
-  "operador": "jaaguilar",
+  "exported_at": "2026-04-18T21:20:36+00:00",
+  "maquina": "Hector",
+  "operador": "hecto",
   "schema_version": 2,
   "slug": "SAN_BARTOLO",
-  "total_rows": 58
+  "total_rows": 1011
 }

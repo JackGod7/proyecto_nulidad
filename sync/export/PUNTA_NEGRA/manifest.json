@@ -1,21 +1,36 @@
 {
   "archivos": {
+    "acta_estado_historial.ndjson.gz": {
+      "bytes": 1063,
+      "rows": 51,
+      "sha256": "e0a8d9a55aa196ce86bde872069bd850ada5e8457f342a1ea93d893ba877a44c"
+    },
     "actas.ndjson.gz": {
-      "bytes": 1261,
+      "bytes": 2453,
       "rows": 25,
-      "sha256": "dd4717c05433269204883226693660505997bfa771a1022988da3f1771285d86"
+      "sha256": "4cac75322cb8d862028075b20730aac0a873596ee05919f9d3dbcff5c9482282"
+    },
+    "instalaciones.ndjson.gz": {
+      "bytes": 734,
+      "rows": 15,
+      "sha256": "71a2bb5052132a38cb9f00e10641adfdbc96bf6d981a620098930a5dac366f87"
     },
     "pdfs.ndjson.gz": {
-      "bytes": 752,
-      "rows": 23,
-      "sha256": "9fc784b86e176178f54de88295480ae627b06db93e6d2d53d7bac5762cfe2326"
+      "bytes": 3656,
+      "rows": 50,
+      "sha256": "6644cb7a7255a12ef58cdff2e3e41265c718879cef2d9ad3f0c22302ce2be2b0"
+    },
+    "votos.ndjson.gz": {
+      "bytes": 14574,
+      "rows": 950,
+      "sha256": "2b8d379fff95f138d76b60cee7fa7ab1f5234105dff84d2ac66c05ca499e8c22"
     }
   },
   "distrito": "PUNTA NEGRA",
-  "exported_at": "2026-04-18T17:39:21+00:00",
-  "maquina": "DETI-0013",
-  "operador": "jaaguilar",
+  "exported_at": "2026-04-18T21:16:27+00:00",
+  "maquina": "Hector",
+  "operador": "hecto",
   "schema_version": 2,
   "slug": "PUNTA_NEGRA",
-  "total_rows": 48
+  "total_rows": 1091
 }

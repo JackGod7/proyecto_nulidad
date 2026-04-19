@@ -1,31 +1,31 @@
 {
   "archivos": {
-    "acta_estado_historial.ndjson.gz": {
-      "bytes": 687,
-      "rows": 32,
-      "sha256": "ef8a5182875d63e284c0c37b33cc0ca13f9bc86e3474844f4d324adde4abe866"
-    },
     "actas.ndjson.gz": {
-      "bytes": 2874,
+      "bytes": 2786,
       "rows": 32,
-      "sha256": "307da9b9b937781da8a10f460602b98705f91fc0b344f2f3ffb9b7b68ca0872a"
+      "sha256": "3a7e1e0a9c35c8e1923f1142294f8ab150aaf3b966dd0fa08e725e4ef5408fe8"
+    },
+    "instalaciones.ndjson.gz": {
+      "bytes": 1362,
+      "rows": 31,
+      "sha256": "1a7ffec35ac944ee5cdccb6175bd4547637959b9dde1996730fb64207773a274"
     },
     "pdfs.ndjson.gz": {
-      "bytes": 1678,
-      "rows": 84,
-      "sha256": "f4aa89a762f49d4de1c525cabdc74c2957b2570b276cd6120e8a0c56fd64d9bc"
+      "bytes": 6351,
+      "rows": 93,
+      "sha256": "63aee1531dadf6ad0e8fccc78dcf70ab01b11ca8e7e5c2f6e524d3b6d4d9b102"
     },
     "votos.ndjson.gz": {
-      "bytes": 18694,
+      "bytes": 18302,
       "rows": 1216,
-      "sha256": "6d8f8a605d01df99a4eaa4a4eee1919f6582c28f013951f485256f9e4b7d781d"
+      "sha256": "91438eedb41cecdf018b12da1aa6df78417dd4fa27aab9f7a203346233ac07b4"
     }
   },
   "distrito": "PUNTA HERMOSA",
-  "exported_at": "2026-04-18T17:39:21+00:00",
-  "maquina": "DETI-0013",
-  "operador": "jaaguilar",
+  "exported_at": "2026-04-18T21:16:31+00:00",
+  "maquina": "Hector",
+  "operador": "hecto",
   "schema_version": 2,
   "slug": "PUNTA_HERMOSA",
-  "total_rows": 1364
+  "total_rows": 1372
 }
