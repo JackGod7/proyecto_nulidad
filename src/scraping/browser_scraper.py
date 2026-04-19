@@ -70,7 +70,7 @@ async def rdelay(factor: float = 1.0) -> None:
 
 
 async def create_context(pw) -> tuple:
-    browser = await pw.chromium.launch(headless=True)
+    browser = await pw.chromium.launch(headless=True, channel="chrome")
     ctx = await browser.new_context(
         user_agent=random.choice(USER_AGENTS),
         viewport={"width": 1920, "height": 1080},
