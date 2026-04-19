@@ -1,9 +1,9 @@
 {
-  "_comment": "MAQUINA_2 - Batch 2: 7 distritos Lima. Rama git: maquina-2",
+  "_comment": "MAQUINA_2 reasignada Cono Sur: SJM + VES (~1100 actas). Rama: distrito/sjm",
   "machine_id": "MAQUINA_2",
-  "owner": "Tony",
+  "owner": "Lynn",
   "lote": 2,
-  "distritos": ["LURÍN", "PACHACÁMAC", "MAGDALENA DEL MAR", "PUEBLO LIBRE", "LINCE", "SAN LUIS", "BARRANCO"],
+  "distritos": ["SAN JUAN DE MIRAFLORES", "VILLA EL SALVADOR"],
   "rol": "worker",
-  "fase_actual": "extraccion"
+  "fase_actual": "scraping"
 }

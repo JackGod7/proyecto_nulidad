@@ -1,36 +1,36 @@
 {
   "archivos": {
     "acta_estado_historial.ndjson.gz": {
-      "bytes": 24071,
-      "rows": 1537,
-      "sha256": "6a6cdcdefea7ef8261e18b494f2097370444a2ccbb07d988292f4a55cfe34db1"
+      "bytes": 34378,
+      "rows": 2226,
+      "sha256": "b9610ecde58c3562996587d17f42eb8e83793cc204d55d9b3aa63d4405fddeed"
     },
     "actas.ndjson.gz": {
-      "bytes": 80204,
+      "bytes": 81403,
       "rows": 1115,
-      "sha256": "526582ff520d3682f81e3779bababffaf71b4875b77f9e7b79f67066d84f87ce"
+      "sha256": "f7049ae757bed7456ee99ca1e24d920d1e247754d4261582e300bdb2346fa7a7"
     },
     "instalaciones.ndjson.gz": {
-      "bytes": 18046,
-      "rows": 663,
-      "sha256": "88b62a42d7f970dc68178581639381f3c375de2e4f9a1faf5705235b28d7ca03"
+      "bytes": 24571,
+      "rows": 684,
+      "sha256": "7272230abb93b3263148ec38d63de0c7bbc994d361dadf558716bab16483b279"
     },
     "pdfs.ndjson.gz": {
-      "bytes": 130765,
-      "rows": 2023,
-      "sha256": "4e82bae9f946ec362114e9664237d2aa2e59414627e6046140fc0342c88f711c"
+      "bytes": 154013,
+      "rows": 2221,
+      "sha256": "f202e584683e7fc36e80a24c6e1ffc9392e5d8fb0f493e69190ab69091e8c839"
     },
     "votos.ndjson.gz": {
-      "bytes": 311838,
-      "rows": 36062,
-      "sha256": "5ecd36085b880b323f8f7c0e0e53b34edcf06f4a882cefb29bde934450cb2a10"
+      "bytes": 572316,
+      "rows": 41914,
+      "sha256": "c75e71381788b67f9c7290ac44239645e565d89849c96f858c907fd822071cef"
     }
   },
   "distrito": "SAN JUAN DE MIRAFLORES",
-  "exported_at": "2026-04-18T17:39:22+00:00",
-  "maquina": "DETI-0013",
-  "operador": "jaaguilar",
+  "exported_at": "2026-04-19T01:54:59+00:00",
+  "maquina": "Admin",
+  "operador": "lynpo",
   "schema_version": 2,
   "slug": "SAN_JUAN_DE_MIRAFLORES",
-  "total_rows": 41400
+  "total_rows": 48160
 }
